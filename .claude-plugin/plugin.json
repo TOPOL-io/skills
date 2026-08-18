@@ -1,0 +1,19 @@
+{
+  "name": "topol-editor-upgrade",
+  "description": "Upgrade an application from @topol.io/editor (and the React/Vue/Svelte wrappers) 0.x to 1.x, where the editor was split into importable EmailEditor and LandingPageEditor entities.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Topol.io",
+    "url": "https://topol.io"
+  },
+  "homepage": "https://docs.topol.io",
+  "repository": "https://github.com/TOPOL-io/skills",
+  "license": "Apache-2.0",
+  "keywords": [
+    "topol",
+    "email-editor",
+    "landing-page-editor",
+    "migration",
+    "upgrade"
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "name": "topol",
+  "owner": {
+    "name": "Topol.io",
+    "url": "https://topol.io"
+  },
+  "metadata": {
+    "description": "Official Topol.io skills and plugins for AI coding agents",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "source": "./",
+      "name": "topol-editor-upgrade",
+      "description": "Migrate an app from @topol.io/editor 0.x to 1.x (Email Editor rename + Landing Page Editor).",
+      "category": "migration"
+    }
+  ]
+}
