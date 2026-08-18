@@ -42,7 +42,9 @@ The component now renders into `#topol-email-editor-id` instead of `#editor`.
 Grep the app for styling or DOM access against the old id and report every hit:
 
 ```bash
-grep -rn "#editor\b\|getElementById('editor')" --include="*.{css,scss,ts,tsx}" . --exclude-dir=node_modules
+grep -rn "#editor\b\|getElementById('editor')" . \
+  --include='*.css' --include='*.scss' --include='*.ts' --include='*.tsx' \
+  --exclude-dir=node_modules
 ```
 
 ## 4. Callback props
@@ -62,6 +64,36 @@ user — ask rather than guessing.
 New optional props (ignore unless the app uses multilingual templates):
 `onBannerClick`, `onLanguageCreated`, `onLanguageDeleted`, `onLanguageSelected`,
 `onPrimaryLanguageChanged`, `onGetMutations`.
+
+## Known issue: `tsc` cannot find the package types (alpha.4, alpha.5)
+
+The published alphas declare `"types": "./dist/types/src/entry.d.ts"` but ship
+the file at `./dist/types/entry.d.ts`, so after the bump `tsc --noEmit` fails
+with:
+
+```
+error TS7016: Could not find a declaration file for module '@topol.io/editor-react'.
+```
+
+This is an upstream packaging bug, not a migration mistake. Until a fixed alpha
+is published, point type resolution at the real file with a `paths` mapping in
+the app's `tsconfig.json` (runtime resolution via `exports` is unaffected; never
+edit `node_modules`):
+
+```jsonc
+{
+  "compilerOptions": {
+    "paths": {
+      "@topol.io/editor-react": [
+        "./node_modules/@topol.io/editor-react/dist/types/entry.d.ts"
+      ]
+    }
+  }
+}
+```
+
+Leave a comment on the mapping and tell the user to remove it once the package
+fixes the path.
 
 ## Completed example
 

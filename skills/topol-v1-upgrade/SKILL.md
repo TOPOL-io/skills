@@ -22,7 +22,9 @@ most apps need a small, mechanical diff rather than a rewrite.
    installed versions:
 
    ```bash
-   grep -rn "@topol.io/editor" --include="*.{ts,tsx,js,jsx,vue,svelte,json}" . \
+   grep -rn "@topol.io/editor" . \
+     --include='*.ts' --include='*.tsx' --include='*.js' --include='*.jsx' \
+     --include='*.vue' --include='*.svelte' --include='*.json' \
      --exclude-dir=node_modules --exclude-dir=dist
    ```
 
@@ -44,15 +46,19 @@ most apps need a small, mechanical diff rather than a rewrite.
    own package manager (check for `pnpm-lock.yaml` / `yarn.lock` / `package-lock.json`):
 
    ```bash
-   npm i @topol.io/editor@^1.0.0 @topol.io/editor-react@^1.0.0   # example
+   npm i @topol.io/editor@^1.0.0 @topol.io/editor-react@^1.0.0   # once 1.0 is stable
    ```
 
-   While 1.0 is in alpha, install `@1.0.0-alpha.4` (or the latest alpha shown by
-   `npm view @topol.io/editor versions`) and tell the user it is a prerelease.
+   While 1.0 is in alpha there is no stable `1.0.0` on the registry, so the
+   command above fails — install the `alpha` dist-tag instead
+   (`npm i @topol.io/editor@alpha`), or the latest alpha shown by
+   `npm view @topol.io/editor versions`, and tell the user it is a prerelease.
 
 4. **Apply the code changes** from the reference file(s). Prefer the modern names
-   (`EmailEditor`) over the deprecated aliases — the aliases log deprecation
-   warnings and will be removed in a later major.
+   (`EmailEditor`) over the deprecated aliases where the wrapper exports them —
+   the aliases log deprecation warnings and will be removed in a later major.
+   (The Svelte wrapper has no `EmailEditor` export; its `TopolEditor` is not
+   deprecated — `references/svelte.md` wins there.)
 
 5. **Verify.** Run the app's own checks and report the real output:
    ```bash

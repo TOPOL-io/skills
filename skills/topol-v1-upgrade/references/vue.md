@@ -35,7 +35,9 @@ v0.x exported `ITopolOptions` as an alias of the Vue-specific options
 `#topol-editor-id` → `#topol-email-editor-id`. Grep and report:
 
 ```bash
-grep -rn "topol-editor-id" --include="*.{css,scss,vue,ts}" . --exclude-dir=node_modules
+grep -rn "topol-editor-id" . \
+  --include='*.css' --include='*.scss' --include='*.vue' --include='*.ts' \
+  --exclude-dir=node_modules
 ```
 
 ## 4. Payload types moved
