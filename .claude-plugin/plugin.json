@@ -1,0 +1,20 @@
+{
+  "name": "topol-editor",
+  "description": "Official Topol.io skills: integrate the Email Editor and Landing Page Editor into an app (v1), and upgrade existing 0.x integrations to 1.x.",
+  "version": "1.1.0",
+  "author": {
+    "name": "Topol.io",
+    "url": "https://topol.io"
+  },
+  "homepage": "https://docs.topol.io",
+  "repository": "https://github.com/TOPOL-io/skills",
+  "license": "Apache-2.0",
+  "keywords": [
+    "topol",
+    "email-editor",
+    "landing-page-editor",
+    "integration",
+    "migration",
+    "upgrade"
+  ]
+}
