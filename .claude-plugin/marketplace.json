@@ -6,13 +6,13 @@
   },
   "metadata": {
     "description": "Official Topol.io skills and plugins for AI coding agents",
-    "version": "1.1.0"
+    "version": "1.2.0"
   },
   "plugins": [
     {
       "source": "./",
       "name": "topol-editor",
-      "description": "Integrate the Topol Email Editor and Landing Page Editor into an app (v1), and upgrade existing 0.x integrations.",
+      "description": "Integrate the Topol Email Editor and Landing Page Editor into an app (v1), and upgrade existing 0.x and 1.x integrations, including to 2.x (Email Editor v4).",
       "category": "development"
     }
   ]
