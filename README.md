@@ -13,6 +13,7 @@ your tool. The packaging below is a convenience, not a requirement.
 | --- | --- |
 | [`topol-editor-integration`](skills/topol-editor-integration/SKILL.md) | Integrates the Email Editor or Landing Page Editor into an app for the first time, on the v1 prerelease packages. Picks the right npm package for the host framework (React/Next.js, Vue 3, Svelte, or plain JS/TS), wires the options and callbacks, and flags what only a human can decide. |
 | [`topol-v1-upgrade`](skills/topol-v1-upgrade/SKILL.md) | Migrates an app from `@topol.io/editor` 0.x to 1.x, where the package was split into importable `EmailEditor` and `LandingPageEditor` entities. Covers the core package and the React, Vue and Svelte wrappers. |
+| [`topol-editor-v2-upgrade`](skills/topol-editor-v2-upgrade/SKILL.md) | Migrates an Email Editor integration from `@topol.io/editor` 0.x/1.x (Email Editor v3) to 2.x (Email Editor v4): the `EmailEditor` instance API, object callback payloads, section renames, the v4 loader, and optional Topol Cloud. Covers the core package and the React, Vue and Svelte wrappers. |
 
 ## Install
 
@@ -53,8 +54,8 @@ npx skills@latest use TOPOL-io/skills@topol-editor-integration
 ### Or point your agent at the files
 
 Hand your tool `skills/topol-editor-integration/SKILL.md` (or
-`skills/topol-v1-upgrade/SKILL.md`) plus the reference for your framework from
-that skill's `references/` directory. Cursor rules, Copilot instructions and
+`skills/topol-v1-upgrade/SKILL.md`, `skills/topol-editor-v2-upgrade/SKILL.md`) plus
+the references from that skill's `references/` directory. Cursor rules, Copilot instructions and
 `AGENTS.md` all accept the same content with their own frontmatter.
 
 ## Usage
@@ -73,10 +74,11 @@ Already on an older Topol version:
 
 ```
 > upgrade this app to @topol.io/editor v1
+> upgrade this app to @topol.io/editor 2.x (Email Editor v4)
 ```
 
-The upgrade skill detects which Topol packages the app uses, bumps them, applies
-the per-framework code changes, runs the project's own typecheck, and reports the
+The upgrade skills detect which Topol packages the app uses, bump them, apply
+the per-framework code changes, run the project's own typecheck, and report the
 parts that need a human decision.
 
 > **v1 is a prerelease.** The npm `latest` tag still points at `0.3.0`, so both
