@@ -7,7 +7,7 @@
   </a>
 </p>
 
-<h1 align="center">Topol skills for AI coding agents</h1>
+<h1 align="center">Topol editors — skills for AI coding agents</h1>
 
 <p align="center">
   Integrate and upgrade the <a href="https://docs.topol.io/email-editor/guide/introduction.html">Email Editor</a>
@@ -26,15 +26,15 @@
 
 ## Skills
 
-Every skill targets the `@topol.io/editor*` npm packages (`editor`, `editor-react`,
-`editor-vue`, `editor-svelte`). Skill names use the **npm major**; the table maps it
-to the editor runtime each major embeds.
+The Topol editors (Email Editor, Landing Page Editor, more to come) ship together in the
+`@topol.io/editor*` npm packages (`editor`, `editor-react`, `editor-vue`, `editor-svelte`).
+Skill names carry the **npm major**; the table maps it to the runtime of each editor.
 
 | Skill | Purpose | npm `@topol.io/editor*` | Email Editor | Landing Page Editor |
 | --- | --- | --- | --- | --- |
-| [`topol-editor-integration`](skills/topol-editor-integration/SKILL.md) | First-time integration: picks the package for the framework, wires options, callbacks and the API key | 1.x | v3 | v1 |
-| [`topol-editor-upgrade-v1`](skills/topol-editor-upgrade-v1/SKILL.md) | Upgrade 0.x → 1.x: split into `EmailEditor` / `LandingPageEditor` exports, renamed types and container ids | 0.x → 1.x | v3 (unchanged) | v1 (new) |
-| [`topol-editor-upgrade-v2`](skills/topol-editor-upgrade-v2/SKILL.md) | Upgrade 0.x/1.x → 2.x: instance API, object callback payloads, section renames, v4 loader, optional Topol Cloud | 0.x/1.x → 2.x | v3 → v4 | not affected |
+| [`topol-editors-integration`](skills/topol-editors-integration/SKILL.md) | First-time integration: picks the package for the framework, wires options, callbacks and the API key | 1.x | v3 | v1 |
+| [`topol-editors-upgrade-v1`](skills/topol-editors-upgrade-v1/SKILL.md) | Upgrade 0.x → 1.x: split into `EmailEditor` / `LandingPageEditor` exports, renamed types and container ids | 0.x → 1.x | v3 (unchanged) | v1 (new) |
+| [`topol-editors-upgrade-v2`](skills/topol-editors-upgrade-v2/SKILL.md) | Upgrade 0.x/1.x → 2.x: instance API, object callback payloads, section renames, v4 loader, optional Topol Cloud | 0.x/1.x → 2.x | v3 → v4 | not affected |
 
 Each skill covers the core package and the React, Vue and Svelte wrappers, runs the
 project's own typecheck, and reports the decisions only a human can make.
@@ -51,14 +51,14 @@ markdown into your project.
 
 ```
 /plugin marketplace add TOPOL-io/skills
-/plugin install topol-editor@topol
+/plugin install topol-editors@topol
 ```
 
 **skills.sh** (Claude Code, Codex, Cursor, Copilot, …)
 
 ```bash
 npx skills@latest add TOPOL-io/skills            # install
-npx skills@latest use TOPOL-io/skills@topol-editor-integration   # one-off, no install
+npx skills@latest use TOPOL-io/skills@topol-editors-integration   # one-off, no install
 ```
 
 **Manual.** Point your agent at `skills/<skill>/SKILL.md` and its `references/`

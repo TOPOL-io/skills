@@ -1,6 +1,6 @@
 ---
-name: topol-editor-upgrade-v1
-description: Upgrade a host app from `@topol.io/editor*` 0.x to 1.x (npm major; the Email Editor stays on the v3 runtime, the Landing Page Editor becomes available). Covers `@topol.io/editor`, `-react`, `-vue`, `-svelte`, where the package was split into importable EmailEditor and LandingPageEditor entities. Use when the user wants to upgrade, migrate, or bump Topol editor packages to 1.x, or hits "TopolEditor is not exported" / "no default export" / ITopolOptions type errors after a Topol bump. For a first-time integration use topol-editor-integration; for 2.x (Email Editor v4) use topol-editor-upgrade-v2.
+name: topol-editors-upgrade-v1
+description: Upgrade a host app from `@topol.io/editor*` 0.x to 1.x (npm major; the Email Editor stays on the v3 runtime, the Landing Page Editor becomes available). Covers `@topol.io/editor`, `-react`, `-vue`, `-svelte`, where the package was split into importable EmailEditor and LandingPageEditor entities. Use when the user wants to upgrade, migrate, or bump Topol editor packages to 1.x, or hits "TopolEditor is not exported" / "no default export" / ITopolOptions type errors after a Topol bump. For a first-time integration use topol-editors-integration; for 2.x (Email Editor v4) use topol-editors-upgrade-v2.
 ---
 
 # Upgrade `@topol.io/editor*` 0.x → 1.x
@@ -8,7 +8,7 @@ description: Upgrade a host app from `@topol.io/editor*` 0.x to 1.x (npm major; 
 > **Versions.** `0.x → 1.x` is the npm major of `@topol.io/editor*`. The Email
 > Editor runtime stays on **v3**, so templates and callbacks keep working; the
 > Landing Page Editor (**v1**) becomes importable. Moving to Email Editor **v4**
-> is `@topol.io/editor*` 2.x — see `topol-editor-upgrade-v2`.
+> is `@topol.io/editor*` 2.x — see `topol-editors-upgrade-v2`.
 
 Migrate a host application that embeds the Topol editor. The v1 packages keep the
 email editor working, but the entry points, some type names, and one DOM id changed.
@@ -43,7 +43,7 @@ most apps need a small, mechanical diff rather than a rewrite.
      anything the per-framework files do not cover
    - `references/landing-page-editor.md` — only if the user wants to *add* the
      landing page editor (this is new functionality, not part of the upgrade; for
-     a from-scratch integration prefer the `topol-editor-integration` skill)
+     a from-scratch integration prefer the `topol-editors-integration` skill)
 
 3. **Bump the dependencies.** All Topol packages must move together — mixing a
    1.x wrapper with a 0.x core (or vice versa) breaks at runtime. Use the app's

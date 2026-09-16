@@ -1,13 +1,13 @@
 ---
-name: topol-editor-integration
-description: Integrate the Topol Email Editor or Landing Page Editor into an app for the first time, on the `@topol.io/editor*` 1.x npm packages (core, -react, -vue, -svelte; Email Editor v3 runtime, Landing Page Editor v1). Use when the user wants to add, embed, install, or set up a Topol editor / drag-and-drop email builder / landing page builder, asks "how do I integrate Topol", or wants a Topol editor screen in a React, Next.js, Vue, Svelte, or plain JS/TS app. For apps already on `@topol.io/editor*` 0.x, use topol-editor-upgrade-v1 instead.
+name: topol-editors-integration
+description: Integrate the Topol Email Editor or Landing Page Editor into an app for the first time, on the `@topol.io/editor*` 1.x npm packages (core, -react, -vue, -svelte; Email Editor v3 runtime, Landing Page Editor v1). Use when the user wants to add, embed, install, or set up a Topol editor / drag-and-drop email builder / landing page builder, asks "how do I integrate Topol", or wants a Topol editor screen in a React, Next.js, Vue, Svelte, or plain JS/TS app. For apps already on `@topol.io/editor*` 0.x, use topol-editors-upgrade-v1 instead.
 ---
 
 # Integrate a Topol editor (`@topol.io/editor*` 1.x)
 
 > **Versions.** `1.x` here is the npm major of `@topol.io/editor*`. It embeds
 > Email Editor **v3** and Landing Page Editor **v1**. `@topol.io/editor*` 2.x
-> (Email Editor v4) is a different API; see `topol-editor-upgrade-v2`.
+> (Email Editor v4) is a different API; see `topol-editors-upgrade-v2`.
 
 Add the Topol **Email Editor**, the **Landing Page Editor**, or both to a host
 application. Always integrate through the npm packages; the CDN script tag is a
@@ -36,7 +36,7 @@ install both a wrapper and a differently-versioned core.
    `bun.lockb` → bun). Use the app's own package manager for every install.
 
    If the app already imports `@topol.io/editor*` at 0.x, this is an upgrade,
-   not an integration — stop and use the `topol-editor-upgrade-v1` skill.
+   not an integration — stop and use the `topol-editors-upgrade-v1` skill.
 
 2. **Resolve the 1.x version to install.** 1.x is a prerelease. The npm
    `latest` tag still points at 0.3.0 and the `alpha` tag has moved on to

@@ -1,5 +1,5 @@
 {
-  "name": "topol-editor",
+  "name": "topol-editors",
   "description": "Official Topol.io skills for the @topol.io/editor* npm packages: integrate the Email Editor and Landing Page Editor (1.x), upgrade 0.x to 1.x, and upgrade 0.x/1.x to 2.x (Email Editor v4).",
   "version": "2.0.0",
   "author": {
