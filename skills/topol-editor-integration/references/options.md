@@ -154,5 +154,5 @@ import type { ITopolOptions } from '@topol.io/editor-svelte';  // = ISvelteOptio
 | Blank page, no iframe | Container has no height, or you never called `instance.render()` (LPE) |
 | `window.TopolPlugin is undefined` | Init ran during SSR — the loader needs a browser (see `react.md`) |
 | Editor loads then errors on save | `api` endpoints/auth header, not the editor — check `onError`'s `responseBody` |
-| Installed 0.3.0 by accident | `latest` is still 0.x; install the resolved `alpha` version explicitly |
+| Installed 0.3.0 or 2.x by accident | `latest` is 0.x and `alpha` is 2.x; pin the newest `1.0.0-alpha.N` from `npm view @topol.io/editor versions --json` |
 | Two editors / duplicate iframes | Two mounts of the component, or a manual `init()` alongside a wrapper |

@@ -1,9 +1,13 @@
 ---
 name: topol-editor-integration
-description: Integrate the Topol Email Editor or Landing Page Editor into an app for the first time, using the v1 prerelease packages from npm (@topol.io/editor, -react, -vue, -svelte). Use when the user wants to add, embed, install, or set up a Topol editor / drag-and-drop email builder / landing page builder, asks "how do I integrate Topol", or wants a Topol editor screen in a React, Next.js, Vue, Svelte, or plain JS/TS app. For apps already on Topol 0.x, use topol-v1-upgrade instead.
+description: Integrate the Topol Email Editor or Landing Page Editor into an app for the first time, on the `@topol.io/editor*` 1.x npm packages (core, -react, -vue, -svelte; Email Editor v3 runtime, Landing Page Editor v1). Use when the user wants to add, embed, install, or set up a Topol editor / drag-and-drop email builder / landing page builder, asks "how do I integrate Topol", or wants a Topol editor screen in a React, Next.js, Vue, Svelte, or plain JS/TS app. For apps already on `@topol.io/editor*` 0.x, use topol-editor-upgrade-v1 instead.
 ---
 
-# Integrate a Topol editor (v1)
+# Integrate a Topol editor (`@topol.io/editor*` 1.x)
+
+> **Versions.** `1.x` here is the npm major of `@topol.io/editor*`. It embeds
+> Email Editor **v3** and Landing Page Editor **v1**. `@topol.io/editor*` 2.x
+> (Email Editor v4) is a different API; see `topol-editor-upgrade-v2`.
 
 Add the Topol **Email Editor**, the **Landing Page Editor**, or both to a host
 application. Always integrate through the npm packages; the CDN script tag is a
@@ -32,26 +36,26 @@ install both a wrapper and a differently-versioned core.
    `bun.lockb` → bun). Use the app's own package manager for every install.
 
    If the app already imports `@topol.io/editor*` at 0.x, this is an upgrade,
-   not an integration — stop and use the `topol-v1-upgrade` skill.
+   not an integration — stop and use the `topol-editor-upgrade-v1` skill.
 
-2. **Resolve the v1 version to install.** v1 ships on the `alpha` prerelease
-   track and the npm `latest` tag still points at 0.3.0, so an unpinned
-   `npm install` silently installs 0.x. Always resolve the tag first:
+2. **Resolve the 1.x version to install.** 1.x is a prerelease. The npm
+   `latest` tag still points at 0.3.0 and the `alpha` tag has moved on to
+   2.0.0-alpha.x, so neither `npm install @topol.io/editor` nor `@alpha`
+   gives you 1.x. Always list the published versions first:
 
    ```bash
-   npm view @topol.io/editor dist-tags --json
+   npm view @topol.io/editor versions --json
    ```
 
-   Install whatever the `alpha` tag currently resolves to — as of this writing
-   that is **`1.0.0-alpha.7`**, but check, do not assume. Recent alphas have
-   introduced no breaking changes, so the newest one is the right pick. Tell the
-   user which prerelease you installed and that the v1 API shape is stable but
-   details can still change.
+   Install the newest `1.0.0-alpha.N` in that list — as of this writing
+   **`1.0.0-alpha.9`**, but check, do not assume. 1.x alphas have introduced
+   no breaking changes between each other. Tell the user which prerelease you
+   installed and that the 1.x API shape is stable but details can still change.
 
 3. **Install.** Every `@topol.io/*` package must be on the exact same version:
 
    ```bash
-   npm install @topol.io/editor-react@1.0.0-alpha.7    # example: React app
+   npm install @topol.io/editor-react@1.0.0-alpha.9    # example: React app
    ```
 
    Pin the exact prerelease version (no `^`) — a caret range across prerelease

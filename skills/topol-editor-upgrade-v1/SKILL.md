@@ -1,9 +1,14 @@
 ---
-name: topol-v1-upgrade
-description: Upgrade an app from @topol.io/editor 0.x (or @topol.io/editor-react / -vue / -svelte 0.x) to 1.x, where the package was split into importable EmailEditor and LandingPageEditor entities. Use when the user mentions upgrading, migrating, or bumping Topol editor packages, hits "TopolEditor is not exported" / "no default export" / ITopolOptions type errors after a Topol bump. For a first-time integration in an app that does not use Topol yet, use topol-editor-integration instead.
+name: topol-editor-upgrade-v1
+description: Upgrade a host app from `@topol.io/editor*` 0.x to 1.x (npm major; the Email Editor stays on the v3 runtime, the Landing Page Editor becomes available). Covers `@topol.io/editor`, `-react`, `-vue`, `-svelte`, where the package was split into importable EmailEditor and LandingPageEditor entities. Use when the user wants to upgrade, migrate, or bump Topol editor packages to 1.x, or hits "TopolEditor is not exported" / "no default export" / ITopolOptions type errors after a Topol bump. For a first-time integration use topol-editor-integration; for 2.x (Email Editor v4) use topol-editor-upgrade-v2.
 ---
 
-# Upgrade Topol Editor 0.x → 1.x
+# Upgrade `@topol.io/editor*` 0.x → 1.x
+
+> **Versions.** `0.x → 1.x` is the npm major of `@topol.io/editor*`. The Email
+> Editor runtime stays on **v3**, so templates and callbacks keep working; the
+> Landing Page Editor (**v1**) becomes importable. Moving to Email Editor **v4**
+> is `@topol.io/editor*` 2.x — see `topol-editor-upgrade-v2`.
 
 Migrate a host application that embeds the Topol editor. The v1 packages keep the
 email editor working, but the entry points, some type names, and one DOM id changed.
@@ -45,14 +50,15 @@ most apps need a small, mechanical diff rather than a rewrite.
    own package manager (check for `pnpm-lock.yaml` / `yarn.lock` / `package-lock.json`):
 
    ```bash
-   npm i @topol.io/editor@^1.0.0 @topol.io/editor-react@^1.0.0   # example
+   npm i @topol.io/editor@1.0.0-alpha.9 @topol.io/editor-react@1.0.0-alpha.9   # example
    ```
 
-   While 1.0 is on the `alpha` track, install the newest alpha — resolve it with
-   `npm view @topol.io/editor dist-tags --json` (as of this writing
-   `1.0.0-alpha.7`) rather than assuming a number. Recent alphas have introduced
-   no breaking changes. Pin the exact version and tell the user it is a
-   prerelease.
+   1.x is a prerelease with no dist-tag of its own (`latest` is 0.3.0, `alpha`
+   is 2.0.0-alpha.x), so `^1.0.0` and `@alpha` both resolve wrong. List the
+   published versions with `npm view @topol.io/editor versions --json` and pin
+   the newest `1.0.0-alpha.N` (as of this writing `1.0.0-alpha.9`) on every
+   Topol package. 1.x alphas have introduced no breaking changes between each
+   other. Tell the user it is a prerelease.
 
 4. **Apply the code changes** from the reference file(s). Prefer the modern names
    (`EmailEditor`) over the deprecated aliases — the aliases log deprecation

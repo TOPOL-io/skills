@@ -1,9 +1,13 @@
 ---
-name: topol-editor-v2-upgrade
-description: Upgrade a host application from `@topol.io/editor`, `@topol.io/editor-react`, `@topol.io/editor-vue` or `@topol.io/editor-svelte` 0.x/1.x (Email Editor v3 contract) to 2.x (Email Editor v4). Use when asked to upgrade or migrate Topol editor packages to 2.x or v4, to port `TopolPlugin` / `TopolEditor` code to the `EmailEditor` instance API, when a 2.x install throws "Editor v4 requires { config: ... }" or callbacks stop firing after a bump, or to add Topol Cloud (`cloud`, `getNonce`) to an existing integration.
+name: topol-editor-upgrade-v2
+description: Upgrade a host app from `@topol.io/editor*` 0.x or 1.x (Email Editor v3 runtime) to 2.x (npm major; Email Editor v4 runtime). Covers `@topol.io/editor`, `-react`, `-vue`, `-svelte`; the Landing Page Editor is untouched. Use when asked to upgrade or migrate Topol editor packages to 2.x or Email Editor v4, to port `TopolPlugin` / `TopolEditor` code to the `EmailEditor` instance API, when a 2.x install throws "Editor v4 requires { config: ... }" or callbacks stop firing after a bump, or to add Topol Cloud (`cloud`, `getNonce`) to an existing integration. For 0.x → 1.x only, use topol-editor-upgrade-v1.
 ---
 
-# Upgrade a Topol Email Editor integration to 2.x
+# Upgrade `@topol.io/editor*` 0.x/1.x → 2.x
+
+> **Versions.** `2.x` is the npm major of `@topol.io/editor*`. It moves the
+> Email Editor runtime from **v3** to **v4** and changes the API shape. The
+> Landing Page Editor is not affected.
 
 2.x targets Email Editor v4. `EmailEditor.init` takes `{ config, ...callbacks }` and returns an independent instance; nothing lives on `window` any more. Every callback receives zero arguments or one object. Reusable blocks are sections. Language mutations use `code`. Only a v4 loader works. `LandingPageEditor` is untouched.
 
