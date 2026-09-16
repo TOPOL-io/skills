@@ -1,95 +1,95 @@
-# Topol skills
+<p align="center">
+  <a href="https://topol.io">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://docs.topol.io/topol-logo-white.svg">
+      <img src="https://docs.topol.io/topol-logo-dark.svg" alt="Topol" width="180">
+    </picture>
+  </a>
+</p>
 
-Guides and Claude Code skills for integrating and upgrading the [Topol editor](https://topol.io)
-in your app.
+<h1 align="center">Topol skills for AI coding agents</h1>
 
-Everything here is plain markdown. Install it as a Claude Code plugin, pull it
-into any agent with [skills.sh](https://skills.sh), or hand a file directly to
-your tool. The packaging below is a convenience, not a requirement.
+<p align="center">
+  Integrate and upgrade the <a href="https://docs.topol.io/email-editor/guide/introduction.html">Email Editor</a>
+  and <a href="https://docs.topol.io/landing-page-editor/guide/introduction.html">Landing Page Editor</a>
+  from Claude Code, Codex, Cursor, Copilot and any agent that reads skills.
+</p>
 
-## Available skills
+<p align="center">
+  <a href="https://docs.topol.io">Docs</a> ·
+  <a href="https://www.npmjs.com/package/@topol.io/editor">npm</a> ·
+  <a href="https://docs.topol.io/changelog/about-changelog.html">Changelog</a> ·
+  <a href="https://topol.io/contact">Contact</a>
+</p>
 
-| Skill | What it does |
-| --- | --- |
-| [`topol-editor-integration`](skills/topol-editor-integration/SKILL.md) | Integrates the Email Editor or Landing Page Editor into an app for the first time, on the v1 prerelease packages. Picks the right npm package for the host framework (React/Next.js, Vue 3, Svelte, or plain JS/TS), wires the options and callbacks, and flags what only a human can decide. |
-| [`topol-v1-upgrade`](skills/topol-v1-upgrade/SKILL.md) | Migrates an app from `@topol.io/editor` 0.x to 1.x, where the package was split into importable `EmailEditor` and `LandingPageEditor` entities. Covers the core package and the React, Vue and Svelte wrappers. |
-| [`topol-editor-v2-upgrade`](skills/topol-editor-v2-upgrade/SKILL.md) | Migrates an Email Editor integration from `@topol.io/editor` 0.x/1.x (Email Editor v3) to 2.x (Email Editor v4): the `EmailEditor` instance API, object callback payloads, section renames, the v4 loader, and optional Topol Cloud. Covers the core package and the React, Vue and Svelte wrappers. |
+---
+
+## Skills
+
+Every skill targets the `@topol.io/editor*` npm packages (`editor`, `editor-react`,
+`editor-vue`, `editor-svelte`). Skill names use the **npm major**; the table maps it
+to the editor runtime each major embeds.
+
+| Skill | Purpose | npm `@topol.io/editor*` | Email Editor | Landing Page Editor |
+| --- | --- | --- | --- | --- |
+| [`topol-editor-integration`](skills/topol-editor-integration/SKILL.md) | First-time integration: picks the package for the framework, wires options, callbacks and the API key | 1.x | v3 | v1 |
+| [`topol-editor-upgrade-v1`](skills/topol-editor-upgrade-v1/SKILL.md) | Upgrade 0.x → 1.x: split into `EmailEditor` / `LandingPageEditor` exports, renamed types and container ids | 0.x → 1.x | v3 (unchanged) | v1 (new) |
+| [`topol-editor-upgrade-v2`](skills/topol-editor-upgrade-v2/SKILL.md) | Upgrade 0.x/1.x → 2.x: instance API, object callback payloads, section renames, v4 loader, optional Topol Cloud | 0.x/1.x → 2.x | v3 → v4 | not affected |
+
+Each skill covers the core package and the React, Vue and Svelte wrappers, runs the
+project's own typecheck, and reports the decisions only a human can make.
+
+> **Prereleases.** 1.x has no dist-tag (`latest` is still 0.3.0, `alpha` is 2.0.0-alpha.x).
+> The skills list published versions and pin the exact one; they never trust `latest` or `^`.
 
 ## Install
 
-The two install paths differ in who owns the files. The **Claude Code plugin**
-installs the skills as a managed, read-only bundle that updates when we ship.
-**[skills.sh](https://skills.sh)** copies the skill files into your project as
-editable markdown, on any agent. Pick one; installing both leaves every skill
-duplicated.
+Pick one path. The plugin is a managed, read-only bundle; skills.sh copies editable
+markdown into your project.
 
-### Claude Code plugin
-
-This repo is also a Claude Code plugin marketplace:
+**Claude Code plugin**
 
 ```
 /plugin marketplace add TOPOL-io/skills
 /plugin install topol-editor@topol
 ```
 
-Updates arrive with `/plugin update`. The files are not meant to be edited.
-
-### skills.sh (Claude Code, Codex, Cursor, Copilot, …)
+**skills.sh** (Claude Code, Codex, Cursor, Copilot, …)
 
 ```bash
-npx skills@latest add TOPOL-io/skills
+npx skills@latest add TOPOL-io/skills            # install
+npx skills@latest use TOPOL-io/skills@topol-editor-integration   # one-off, no install
 ```
 
-The installer asks which skills to add and which agents to install them on
-(`-a '*'` for all detected agents, `--copy` to copy the files instead of
-symlinking them). The files land in your project as **ordinary markdown you own**.
-Updates are manual, via `npx skills update`.
-
-To use the skill once without installing anything:
-
-```bash
-npx skills@latest use TOPOL-io/skills@topol-editor-integration
-```
-
-### Or point your agent at the files
-
-Hand your tool `skills/topol-editor-integration/SKILL.md` (or
-`skills/topol-v1-upgrade/SKILL.md`, `skills/topol-editor-v2-upgrade/SKILL.md`) plus
-the references from that skill's `references/` directory. Cursor rules, Copilot instructions and
-`AGENTS.md` all accept the same content with their own frontmatter.
+**Manual.** Point your agent at `skills/<skill>/SKILL.md` and its `references/`
+directory. Cursor rules, Copilot instructions and `AGENTS.md` accept the same content.
 
 ## Usage
 
-In the repo of the app you want to embed the editor in:
+Run inside the app that embeds the editor:
 
 ```
 > add the Topol email editor to this app
 > add a Topol landing page editor screen
-```
-
-The integration skill picks the package that matches the framework, installs the
-v1 prerelease, and writes the component wiring.
-
-Already on an older Topol version:
-
-```
-> upgrade this app to @topol.io/editor v1
+> upgrade this app to @topol.io/editor 1.x
 > upgrade this app to @topol.io/editor 2.x (Email Editor v4)
 ```
 
-The upgrade skills detect which Topol packages the app uses, bump them, apply
-the per-framework code changes, run the project's own typecheck, and report the
-parts that need a human decision.
+## Documentation
 
-> **v1 is a prerelease.** The npm `latest` tag still points at `0.3.0`, so both
-> skills resolve the newest version on the `alpha` tag and pin it explicitly.
+| | Email Editor | Landing Page Editor |
+| --- | --- | --- |
+| Getting started | [Guide](https://docs.topol.io/email-editor/guide/getting-started.html) | [Guide](https://docs.topol.io/landing-page-editor/guide/getting-started.html) |
+| npm & frameworks | [NPM & Frameworks](https://docs.topol.io/email-editor/guide/js-frameworks.html) · [Next.js](https://docs.topol.io/email-editor/guide/integration-nextjs.html) | [NPM integration](https://docs.topol.io/landing-page-editor/guide/npm-integration.html) |
+| Options reference | [Options](https://docs.topol.io/email-editor/reference/topol-options.html) · [Plugin API](https://docs.topol.io/email-editor/reference/topol-plugin.html) | [Options](https://docs.topol.io/landing-page-editor/reference/topol-options.html) · [Plugin API](https://docs.topol.io/landing-page-editor/reference/topol-plugin.html) |
+| Callbacks | [Callbacks](https://docs.topol.io/email-editor/guide/callbacks.html) | [API](https://docs.topol.io/landing-page-editor/guide/api.html) |
+| Migrations | [NPM packages v1](https://docs.topol.io/email-editor/guide/npm-v1-migration.html) · [Loader URL](https://docs.topol.io/email-editor/guide/new-topol-plugin-loader-url.html) | [Email vs. Landing Page Editor](https://docs.topol.io/landing-page-editor/guide/email-editor-vs-landing-page-editor.html) |
 
-## Related
-
-- [Topol documentation](https://docs.topol.io)
-- Integration packages: `@topol.io/editor`, `@topol.io/editor-react`,
-  `@topol.io/editor-vue`, `@topol.io/editor-svelte`
+Packages on npm: [`@topol.io/editor`](https://www.npmjs.com/package/@topol.io/editor) ·
+[`@topol.io/editor-react`](https://www.npmjs.com/package/@topol.io/editor-react) ·
+[`@topol.io/editor-vue`](https://www.npmjs.com/package/@topol.io/editor-vue) ·
+[`@topol.io/editor-svelte`](https://www.npmjs.com/package/@topol.io/editor-svelte)
 
 ## License
 
-Apache-2.0
+Apache-2.0 · © [Topol.io](https://topol.io)
