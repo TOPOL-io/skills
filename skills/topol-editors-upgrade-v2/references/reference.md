@@ -244,7 +244,7 @@ Every 2.x callback takes zero arguments or one object. Wrapper events deliver th
 | `onLanguageSelected(lang)`                                                          | `onLanguageSelected({ code })`                                                        |
 | `onGetMutations(mutations)`                                                         | `onGetMutations({ mutations })`                                                       |
 
-New in 2.x: `onPreviewClose()`, `onImageDelete({ items })` with items `{ name, type, path, url?, key }`, `onBlocksAndStructuresVisibilityChange({ value })`, `onTemplateUpdated()`, and the Cloud callbacks `getNonce`, `onCloudSave`, `onCloudTemplateChange`.
+New in 2.x: `onPreviewClose()`, `onImageDelete({ items })` with items `{ name, type, path, url?, key }`, `onBlocksAndStructuresVisibilityChange({ value })`, `onTemplateUpdated()`, the nonce authentication callback `getNonce`, and the Cloud callbacks `onCloudSave`, `onCloudTemplateChange`. `onEditorError` gains the `nonceAuth` source.
 
 Reserved keys: `onClose` and `onError` are stripped before reaching the editor. Any handler under those names is dead code in 2.x.
 
@@ -268,7 +268,7 @@ Reserved keys: `onClose` and `onError` are stripped before reaching the editor. 
 | —                                                                                            | `cloud: { enabled, templateId?, features? }`                                                                                                                                                                                                                     |
 | —                                                                                            | `permissions`, `enableSubjectLine`, `chatAIOnSegment`, `aiLabeledElements`, `languageMergeTag`, `productMergetagTags`, `enableFileManagerInGif`, `googlePromotionalAnnotation`, `ecm`, `lambdaStage`, countdown/loop/rating content blocks, image-editor options |
 
-Types: `IEmailConfig` (config), `ITopolOptions` (`{ config } & IEmailCallbacks`), `IEmailEditorInstance` (returned instance), `IEmailEditorPluginOptions` (`{ stage?, loaderUrl? }`), `ISavedSection`, `IPremadeSections`, `ILanguageMutation`, `ISaveData`, `IErrorData`, `ISendTestData`, `ICloudOptions`, `ICloudFeatures`. `ISavedBlock` is a deprecated alias of `ISavedSection`. Wrapper config aliases: `IReactEmailOptions`, `IVueEmailOptions`, `ISvelteOptions` (all `IEmailConfig`).
+Types: `IEmailConfig` (config), `ITopolOptions` (`{ config } & IEmailCallbacks`), `IEmailEditorInstance` (returned instance), `IEmailEditorPluginOptions` (`{ stage?, loaderUrl? }`), `ISavedSection`, `IPremadeSections`, `ILanguageMutation`, `ISaveData`, `IErrorData`, `ISendTestData`, `INonceAuthCallbacks` (`getNonce`; re-exported by every wrapper), `ICloudCallbacks`, `ICloudOptions`, `ICloudFeatures`. `ISavedBlock` is a deprecated alias of `ISavedSection`. Wrapper config aliases: `IReactEmailOptions`, `IVueEmailOptions`, `ISvelteOptions` (all `IEmailConfig`).
 
 ## Loader and environments
 
@@ -280,9 +280,32 @@ Types: `IEmailConfig` (config), `ITopolOptions` (`{ config } & IEmailCallbacks`)
 - Let `init` insert the script. A host-inserted `<script src=…loader/build.js>` or a foreign `window.TopolEmailEditor` rejects with "Cannot initialize from a host-provided loader with unknown lifecycle." An already loaded production runtime is reused.
 - Numeric-stage loader failures fall back to production only before any runtime has initialized.
 
+## Nonce authentication
+
+Passing `getNonce` switches authentication from the public key alone to short-lived `nc_` nonces minted on the host's backend from the `sk_` secret. It is standalone: there is no separate option, the presence of the callback enables it, and templates, autosaves, images, comments, and sections keep using the host's `api.*` endpoints and callbacks. Topol Cloud is built on top of it.
+
+```ts
+const editor = await EmailEditor.init({
+  config: { authorize: { apiKey: "pk_public-key", userId: "user-123" } },
+  async getNonce() {
+    // Runs on the host page with first-party session cookies. Your server calls Topol's
+    // POST /auth/nonce with the sk_ secret and this userId. sk_ secrets never reach the browser.
+    const response = await fetch("/api/topol/nonce", { method: "POST" });
+    if (!response.ok) throw new Error("Could not mint a Topol nonce");
+    return (await response.json()).nonce; // a fresh nc_ token
+  },
+});
+```
+
+Rules:
+
+- In wrappers, `getNonce` is a React prop or a `callbacks` member (Vue/Svelte), never an event. Its type is `INonceAuthCallbacks["getNonce"]`; it moved from `ICloudCallbacks`, so only code referencing `ICloudCallbacks["getNonce"]` directly needs a change.
+- The nonce endpoint is the host's responsibility: authenticate the session, derive the user, mint the nonce with the `sk_` secret server-side.
+- The editor refreshes the nonce before it expires and retries once on a rejected nonce. A first nonce that cannot be obtained reports `onEditorError` with `source: "authorize"`; a later refresh failure reports `source: "nonceAuth"` while the editor keeps working on the last valid nonce.
+
 ## Topol Cloud
 
-Cloud moves templates, autosaves, images, comments, sections, multilanguage, and test-send into Topol's backend.
+Cloud moves templates, autosaves, images, comments, sections, multilanguage, and test-send into Topol's backend. It runs on nonce authentication, so set up `getNonce` as above first.
 
 ```ts
 const editor = await EmailEditor.init({
@@ -290,13 +313,7 @@ const editor = await EmailEditor.init({
     authorize: { apiKey: "pk_public-key", userId: "user-123" },
     cloud: { enabled: true, templateId: 123, features: { images: false } },
   },
-  async getNonce() {
-    // Runs on the host page with first-party session cookies. Your server mints a fresh nc_ token
-    // for this public key and user. sk_ secrets never reach the browser.
-    const response = await fetch("/api/topol/nonce", { method: "POST" });
-    if (!response.ok) throw new Error("Could not authorize Topol Cloud");
-    return (await response.json()).nonce;
-  },
+  getNonce, // required; see Nonce authentication
   onCloudSave({ templateId, name, langCode }) {},
   onCloudTemplateChange({ type, templateId, name, folderId }) {}, // type: rename | delete | duplicate | move
 });
@@ -304,10 +321,9 @@ const editor = await EmailEditor.init({
 
 Rules:
 
-- `cloud.enabled` needs a `pk_` key and `getNonce`; `init` rejects without it. In wrappers, `getNonce` is a React prop or a `callbacks` member (Vue/Svelte), never an event.
+- `cloud.enabled` needs a `pk_` key and `getNonce`; `init` rejects without it.
 - Each feature can be switched back to external behaviour with `features.<name>: false`. Cloud-active features ignore their external `api` endpoints and callbacks and warn about them. `onSave` and `onTestSend` do not fire for Cloud-owned persistence and test-send; `onSaveAndClose`, lifecycle, error, and notification callbacks still do. `instance.save()` works in either mode.
 - `cloud.templateId` opens a stored template; omitting it opens the Cloud template browser. `config.templateId` is ignored in Cloud mode. A new template's id arrives via `onCloudSave`.
-- The nonce endpoint is the host's responsibility: authenticate the session, derive the user, mint the nonce with the `sk_` secret server-side. The editor handles refresh and retry.
 
 ## Leftover grep (must return nothing after migration)
 

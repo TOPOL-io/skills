@@ -34,7 +34,7 @@ Skill names carry the **npm major**; the table maps it to the runtime of each ed
 | --- | --- | --- | --- | --- |
 | [`topol-editors-integration`](skills/topol-editors-integration/SKILL.md) | First-time integration: picks the package for the framework, wires options, callbacks and the API key | 1.x | v3 | v1 |
 | [`topol-editors-upgrade-v1`](skills/topol-editors-upgrade-v1/SKILL.md) | Upgrade 0.x → 1.x: split into `EmailEditor` / `LandingPageEditor` exports, renamed types and container ids | 0.x → 1.x | v3 (unchanged) | v1 (new) |
-| [`topol-editors-upgrade-v2`](skills/topol-editors-upgrade-v2/SKILL.md) | Upgrade 0.x/1.x → 2.x: instance API, object callback payloads, section renames, v4 loader, optional Topol Cloud | 0.x/1.x → 2.x | v3 → v4 | not affected |
+| [`topol-editors-upgrade-v2`](skills/topol-editors-upgrade-v2/SKILL.md) | Upgrade 0.x/1.x → 2.x: instance API, object callback payloads, section renames, v4 loader, optional nonce authentication and Topol Cloud | 0.x/1.x → 2.x | v3 → v4 | not affected |
 
 Each skill covers the core package and the React, Vue and Svelte wrappers, runs the
 project's own typecheck, and reports the decisions only a human can make.

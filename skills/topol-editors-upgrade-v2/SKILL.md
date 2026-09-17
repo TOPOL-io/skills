@@ -1,6 +1,6 @@
 ---
 name: topol-editors-upgrade-v2
-description: Upgrade a host app from `@topol.io/editor*` 0.x or 1.x (Email Editor v3 runtime) to 2.x (npm major; Email Editor v4 runtime). Covers `@topol.io/editor`, `-react`, `-vue`, `-svelte`; the Landing Page Editor is untouched. Use when asked to upgrade or migrate Topol editor packages to 2.x or Email Editor v4, to port `TopolPlugin` / `TopolEditor` code to the `EmailEditor` instance API, when a 2.x install throws "Editor v4 requires { config: ... }" or callbacks stop firing after a bump, or to add Topol Cloud (`cloud`, `getNonce`) to an existing integration. For 0.x → 1.x only, use topol-editors-upgrade-v1.
+description: Upgrade a host app from `@topol.io/editor*` 0.x or 1.x (Email Editor v3 runtime) to 2.x (npm major; Email Editor v4 runtime). Covers `@topol.io/editor`, `-react`, `-vue`, `-svelte`; the Landing Page Editor is untouched. Use when asked to upgrade or migrate Topol editor packages to 2.x or Email Editor v4, to port `TopolPlugin` / `TopolEditor` code to the `EmailEditor` instance API, when a 2.x install throws "Editor v4 requires { config: ... }" or callbacks stop firing after a bump, or to add nonce authentication (`getNonce`) or Topol Cloud (`cloud`) to an existing integration. For 0.x → 1.x only, use topol-editors-upgrade-v1.
 ---
 
 # Upgrade `@topol.io/editor*` 0.x/1.x → 2.x
@@ -86,9 +86,9 @@ Build-time overrides are `VITE_TOPOL_V4_URL`, `VITE_TOPOL_V4_DEV_URL`, `VITE_TOP
 
 Done when no v3 loader URL, `VITE_TOPOL_URL`, or host-inserted loader script remains in code, env files, or HTML.
 
-### 8. Adopt Topol Cloud (only when asked)
+### 8. Adopt nonce authentication or Topol Cloud (only when asked)
 
-Cloud is opt-in and needs a `pk_` public key plus a server endpoint that mints `nc_` nonces for the signed-in user. Follow the Cloud section of `references/reference.md`. Cloud-owned features silence `onSave` / `onTestSend` and ignore matching `api` endpoints.
+Nonce authentication is standalone: passing `getNonce` switches the editor from the public-key authorize call to short-lived `nc_` nonces minted by a host server endpoint for the signed-in user. There is no separate option, and every feature stays external. Topol Cloud (`cloud.enabled`) is layered on top and requires `getNonce`. Both need a `pk_` public key. Follow the Nonce authentication and Topol Cloud sections of `references/reference.md`. Cloud-owned features silence `onSave` / `onTestSend` and ignore matching `api` endpoints.
 
 ### 9. Verify
 
