@@ -3,39 +3,53 @@
 Peer deps: `react` / `react-dom` `^18 || ^19`. Ships both editors as components.
 
 ```bash
-npm install @topol.io/editor-react@<resolved-v1-version>
+npm install @topol.io/editor-react@<resolved 1.x alpha version>
 ```
 
 ## Email Editor
 
 ```tsx
-import { EmailEditor, type IReactEmailOptions } from '@topol.io/editor-react';
+import { useRef } from 'react';
+import { EmailEditor, type IEmailEditorRef, type IReactEmailOptions } from '@topol.io/editor-react';
 
 const options: IReactEmailOptions = {
   authorize: {
     apiKey: import.meta.env.VITE_TOPOL_API_KEY,   // or process.env.NEXT_PUBLIC_TOPOL_API_KEY
-    userId: currentUser.id,
+    userId: currentUser.id,                       // integer or [A-Za-z0-9_-]+
   },
 };
 
 export default function EmailEditorPage() {
+  const ref = useRef<IEmailEditorRef>(null);
+
   return (
-    <EmailEditor
-      options={options}
-      onSave={(json, html, mutations, syncedSections) => {
-        // TODO: persist the template — application decision
-      }}
-      onError={(type, message, responseBody) => console.error(type, message, responseBody)}
-    />
+    <>
+      <button onClick={() => ref.current?.getEditor()?.save()}>Save</button>
+      <EmailEditor
+        ref={ref}
+        options={options}
+        onSave={async ({ json, html, mutations, syncedSections }) => {
+          // TODO: persist the template — application decision. Return/await the
+          // promise: the editor waits for it and shows a rejection as a save error.
+        }}
+        onEditorError={({ source, message, detail }) => console.error(source, message, detail)}
+        onReady={(editor) => {/* iframe rendered; instance available */}}
+        style={{ height: '100vh' }}
+      />
+    </>
   );
 }
 ```
 
-- `options` is `Omit<ITopolOptions, 'id' | 'callbacks'>` — the component owns the
-  container id and turns your props into callbacks.
-- The component renders its own `<div id="topol-email-editor-id">` with
-  `position: absolute; width: 100%; height: 100vh`. Mount it on a full-page route.
-- Callbacks are **positional props**, matching the core signatures.
+- `options` is the config (`IEmailConfig`); callbacks are separate props with
+  the core's **object** payloads and return types.
+- `ref.current?.getEditor()` returns the instance (or `null` before it exists);
+  every method returns a promise. `onReady` fires once the iframe has rendered;
+  `onInit` fires once the editor has authenticated.
+- The component renders a plain `div` (`width: 100%; height: 100vh` by default,
+  no id). Size it with `style` / `className`.
+- Extra props: `stage`, `loaderUrl` (leave unset in production), `getNonce`,
+  `onCloudSave`, `onCloudTemplateChange` for nonce authentication / Cloud.
 
 ## Landing Page Editor
 
@@ -61,7 +75,8 @@ export default function LandingPagePage() {
       <LandingPageEditor
         ref={editorRef}
         options={options}
-        onSave={(json, html) => {/* TODO: persist */}}
+        onSave={async ({ json, html }) => {/* TODO: persist */}}
+        onEditorError={({ source, message }) => console.error(source, message)}
       />
     </>
   );
@@ -70,48 +85,40 @@ export default function LandingPagePage() {
 
 - `options` here is the LPE **config** object only (`ILandingPageOptions['config']`);
   the wrapper wraps it as `{ config, ...callbacks }` and calls `render()` itself.
-- The ref exposes `load(template)` and `save()` — nothing else. For `destroy`,
-  unmount the component.
-- Container id is `topol-landing-page-editor-id`.
-- `onSave` takes **two** args here, not four.
+- The ref exposes `load(template)` and `save()`. For `destroy`, unmount the
+  component.
+- The container is `#topol-landing-page-editor-id`, `position: absolute;
+  width: 100%; height: 100vh` — mount it on a full-page route.
+- Only the callbacks you pass are forwarded; without `onSaveAndClose` /
+  `onEditorClose` the runtime falls back to `onSave` and closes itself.
 
-## Both editors on one screen
+## Options are read on mount
 
-Each component mounts a fixed, absolutely-positioned container, so rendering both
-at once overlaps them. Render one at a time (tab/route switch), not side by side.
+Both components initialize once on mount and tear down on unmount. Configuration
+and **which** callback props are present are captured on mount; changing them
+afterwards does not re-initialize the editor. Callback functions are read fresh
+on every call, so handlers can close over current state safely.
 
-## Options are read once
+To change Email Editor configuration at runtime, call
+`ref.current?.getEditor()?.updateOptions(partial)`, or remount with a new React
+`key`. Define `options` outside the component or in a `useMemo`.
 
-Both components initialize in a `useEffect` with an empty dependency array and
-tear down on unmount — changing `options` afterwards does **not** re-initialize
-the editor. Callback props are always read fresh (they go through a ref), so
-handlers can close over current state safely. To change configuration at runtime,
-call `CoreEmailEditor.updateOptions(partial)` instead of mutating the prop:
-
-```tsx
-import { CoreEmailEditor } from '@topol.io/editor-react';
-CoreEmailEditor.updateOptions({ light: true });
-```
-
-Define `options` outside the component or in a `useMemo` — a fresh object each
-render is harmless but misleading.
-
-`StrictMode` double-mounting is already guarded internally; do not add your own
-init guard.
+`StrictMode` double-mounting is handled internally (one instance, one iframe);
+do not add your own init guard. Each component owns its own instance, so several
+Email Editors per page work, but they must share one loader URL.
 
 ## Next.js / SSR
 
-The editor loads a browser script and touches `window` on init, so it must never
-run on the server.
+The editor needs a browser; `EmailEditor.init` rejects on the server. Mark the
+page or component as a client component:
 
 ```tsx
 'use client';
 import { EmailEditor } from '@topol.io/editor-react';
 ```
 
-`'use client'` at the top of the page/component is enough in the App Router. If
-you hit hydration or `window is undefined` errors from a shared layout, import it
-lazily instead:
+If you hit hydration or `window is undefined` errors from a shared layout, import
+it lazily instead:
 
 ```tsx
 const EmailEditor = dynamic(
@@ -126,5 +133,5 @@ the browser and the editor will fail to authorize. In the Pages Router, the same
 
 ## Deprecated
 
-`TopolEditor` is the 0.x component name, kept as an alias that logs a deprecation
-warning on mount. Use `EmailEditor` in new code.
+`TopolEditor` is a named, deprecated alias of `EmailEditor` with the same props;
+it logs a warning on mount. There is no default export. Use `EmailEditor`.

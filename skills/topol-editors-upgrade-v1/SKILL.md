@@ -1,96 +1,121 @@
 ---
 name: topol-editors-upgrade-v1
-description: Upgrade a host app from `@topol.io/editor*` 0.x to 1.x (npm major; the Email Editor stays on the v3 runtime, the Landing Page Editor becomes available). Covers `@topol.io/editor`, `-react`, `-vue`, `-svelte`, where the package was split into importable EmailEditor and LandingPageEditor entities. Use when the user wants to upgrade, migrate, or bump Topol editor packages to 1.x, or hits "TopolEditor is not exported" / "no default export" / ITopolOptions type errors after a Topol bump. For a first-time integration use topol-editors-integration; for 2.x (Email Editor v4) use topol-editors-upgrade-v2.
+description: 'Upgrade a host app from `@topol.io/editor*` 0.x or an early 1.x alpha (Email Editor v3 API) to 1.x from `1.0.0-alpha.10` (Email Editor v4 API). Covers `@topol.io/editor`, `-react`, `-vue`, `-svelte`; the Landing Page Editor API is unchanged and becomes available to 0.x apps. Use when asked to upgrade, migrate, or bump Topol editor packages to 1.x or Email Editor v4, to port `TopolPlugin` / `TopolEditor` code to the `EmailEditor` instance API, when an install throws "Editor v4 requires { config: ... }", callbacks stop firing, or "no default export" / `ITopolOptions` type errors appear after a Topol bump, or to add nonce authentication (`getNonce`) or Topol Cloud (`cloud`) to an existing integration. For a first-time integration use topol-editors-integration.'
 ---
 
-# Upgrade `@topol.io/editor*` 0.x → 1.x
+# Upgrade `@topol.io/editor*` 0.x / early 1.x alpha → 1.x (Email Editor v4)
 
-> **Versions.** `0.x → 1.x` is the npm major of `@topol.io/editor*`. The Email
-> Editor runtime stays on **v3**, so templates and callbacks keep working; the
-> Landing Page Editor (**v1**) becomes importable. Moving to Email Editor **v4**
-> is `@topol.io/editor*` 2.x — see `topol-editors-upgrade-v2`.
+> **Versions.** From `1.0.0-alpha.10` (`@topol.io/editor-react` `1.0.0-alpha.11`)
+> the 1.x line embeds Email Editor **v4** and changes the API shape. `0.3.0`
+> (`latest`) and `1.0.0-alpha.1`–`.9` (editor-react up to `.10`) use the v3 API
+> and migrate the same way. The Landing Page Editor API is not affected.
 
-Migrate a host application that embeds the Topol editor. The v1 packages keep the
-email editor working, but the entry points, some type names, and one DOM id changed.
+The v4 API: `EmailEditor.init` takes `{ config, ...callbacks }` and returns an independent instance; nothing lives on `window` any more. Every callback receives zero arguments or one object. Reusable blocks are sections. Language mutations use `code`. Only a v4 loader works. `LandingPageEditor` is untouched.
 
-## What changed, in one paragraph
+[`references/reference.md`](references/reference.md) holds the version map, the extra 0.3.0 differences, every rename table, the per-framework before/after code, loader rules, wrapper semantics, and the Cloud setup. [`references/landing-page-editor.md`](references/landing-page-editor.md) covers adding the Landing Page Editor and fixing Landing Page Editor code from `1.0.0-alpha.1`–`.8`.
 
-v0.x shipped a single editor. v1 splits the package into two importable entities —
-`EmailEditor` (the old editor, renamed) and `LandingPageEditor` (new) — and every
-package now exports through a real entry file with **named exports only** in the
-React wrapper. `TopolPlugin` / `TopolEditor` still exist as deprecated aliases, so
-most apps need a small, mechanical diff rather than a rewrite.
+## Steps
 
-## Procedure
+### 1. Inventory the integration
 
-1. **Detect what the app uses.** Search the project for Topol imports and the
-   installed versions:
+Find every touchpoint before editing anything:
 
-   ```bash
-   grep -rn "@topol.io/editor" --include="*.{ts,tsx,js,jsx,vue,svelte,json}" . \
-     --exclude-dir=node_modules --exclude-dir=dist
-   ```
+```sh
+grep -rnE "@topol\.io/editor|TopolPlugin|TopolEditor|EmailEditor|LandingPageEditor|VITE_TOPOL|topol-email-editor-id|topol-editor-id|#editor|loader/build\.js" . \
+  --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=.git \
+  --exclude=package-lock.json --exclude=yarn.lock --exclude=pnpm-lock.yaml
+```
 
-   Note which package(s) appear: core (`@topol.io/editor`), `-react`, `-vue`,
-   `-svelte`. An app may use more than one.
+Record the installed version of each Topol package and, for each hit, its kind: dependency, init/mount, method call, callback handler, config option, type import, CSS/DOM selector, loader script or env var. Note which framework wrapper (or plain core) is used and whether the app uses React StrictMode, SSR, or several editors per page.
 
-2. **Read the reference for each package in use** — do not migrate from memory:
-   - `references/vanilla.md` — core `@topol.io/editor` (plain JS/TS)
-   - `references/react.md` — `@topol.io/editor-react`
-   - `references/vue.md` — `@topol.io/editor-vue`
-   - `references/svelte.md` — `@topol.io/editor-svelte`
-   - `references/breaking-changes.md` — the full changed-surface list, for
-     anything the per-framework files do not cover
-   - `references/landing-page-editor.md` — only if the user wants to *add* the
-     landing page editor (this is new functionality, not part of the upgrade; for
-     a from-scratch integration prefer the `topol-editors-integration` skill)
+If every Topol package is already at `1.0.0-alpha.10`+ (editor-react `1.0.0-alpha.11`+), there is nothing to migrate.
 
-3. **Bump the dependencies.** All Topol packages must move together — mixing a
-   1.x wrapper with a 0.x core (or vice versa) breaks at runtime. Use the app's
-   own package manager (check for `pnpm-lock.yaml` / `yarn.lock` / `package-lock.json`):
+Done when every file that imports a Topol package is listed, and every identifier from the rename tables in `references/reference.md` that appears in the app has a line in the inventory.
 
-   ```bash
-   npm i @topol.io/editor@1.0.0-alpha.9 @topol.io/editor-react@1.0.0-alpha.9   # example
-   ```
+### 2. Install the 1.x v4 release
 
-   1.x is a prerelease with no dist-tag of its own (`latest` is 0.3.0, `alpha`
-   is 2.0.0-alpha.x), so `^1.0.0` and `@alpha` both resolve wrong. List the
-   published versions with `npm view @topol.io/editor versions --json` and pin
-   the newest `1.0.0-alpha.N` (as of this writing `1.0.0-alpha.9`) on every
-   Topol package. 1.x alphas have introduced no breaking changes between each
-   other. Tell the user it is a prerelease.
+1.x is a prerelease on the `alpha` dist-tag; `latest` still points at `0.3.0`. Each package has its own number (editor-react is one ahead), so resolve them separately and pin exact versions, never `^`:
 
-4. **Apply the code changes** from the reference file(s). Prefer the modern names
-   (`EmailEditor`) over the deprecated aliases — the aliases log deprecation
-   warnings and will be removed in a later major.
+```sh
+npm view @topol.io/editor dist-tags          # alpha must be 1.0.0-alpha.10 or later
+npm view @topol.io/editor-react dist-tags    # alpha must be 1.0.0-alpha.11 or later (or -vue / -svelte: .10+)
+npm install @topol.io/editor-react@<alpha version>   # wrappers pull in the matching core
+npm ls @topol.io/editor
+```
 
-5. **Verify.** Run the app's own checks and report the real output:
-   ```bash
-   npx tsc --noEmit    # or the project's typecheck / lint / build / test scripts
-   ```
-   Type errors mentioning `ITopolOptions`, `ISaveData`, or a missing default
-   export are expected fallout of this migration — fix them using
-   `references/breaking-changes.md`, do not silence them with `any`.
+If `alpha` points below `1.0.0-alpha.10` (editor-react `1.0.0-alpha.11`), the 1.x v4 release is not published yet: stop and tell the user. If the app also depends on the core directly, pin it to the version the wrapper depends on (`npm view @topol.io/editor-react@<version> dependencies`). Use the app's own package manager (detect it from the lockfile). If the app pins `@topol.io/editor` 0.x deliberately (comment, renovate config), ask before bumping.
 
-6. **Report** what changed, what was left alone, and anything the user must
-   verify by hand (see *Cannot be automated* below).
+Done when `npm ls @topol.io/editor` shows a single 1.x entry at `1.0.0-alpha.10` or later.
+
+### 3. Rewrite initialization and lifecycle
+
+The `id` option and nested `callbacks` object are gone. `init` resolves to an instance before authentication; `render(container)` mounts the iframe; `onInit` reports successful authentication; `destroy()` runs on teardown, never right after `render`. The container must exist and have a height.
+
+Branch by framework, following the matching before/after in `references/reference.md`:
+
+- **Core**: `const editor = await EmailEditor.init({ config, ...callbacks }, { stage?, loaderUrl? }); await editor.render("#editor");`
+- **React**: `<EmailEditor options={config} onSave={...} ref={ref} onReady={...} />`. The 0.3.0 default import of `TopolEditor` becomes the named `EmailEditor`.
+- **Vue**: `<EmailEditor :options="config" :callbacks="callbacks" @on-save="..." @ready="..." />`. Handlers whose return value the editor must await (`onSave`, `onSaveAndClose`, `getNonce`) go in the `callbacks` prop; events are notifications only.
+- **Svelte**: `<EmailEditor {options} {callbacks} on:onSave={(e) => e.detail} on:ready={...} />`. The old `ITopolOptions` wrapper type is now `ISvelteOptions`.
+
+Done when no `id:` option, nested `callbacks:` key, or `TopolPlugin` default import remains, and each mounted component owns exactly one instance.
+
+### 4. Move method calls onto the instance
+
+Replace every `TopolPlugin.x()` / `EmailEditor.x()` / `CoreEmailEditor.x()` / `window.TopolPlugin.x()` with a call on the instance from step 3 (React `ref.current?.getEditor()` or `onReady`; Vue template ref `getEditor()` or `@ready`; Svelte `bind:this` + `getEditor()` or `on:ready`). All methods return promises; await `save()` where the host must observe completion.
+
+Renames: `save('en')` → `save({ langCode: 'en' })`, `setSavedBlocks` → `setSavedSections`, `refreshSyncedRows` → `refreshSyncedSections`. `getMutations()` resolves to `{ code, primary }[]`. Full table in `references/reference.md`.
+
+Done when `TopolPlugin.` and `window.TopolPlugin` no longer appear, and every renamed method is replaced.
+
+### 5. Convert callbacks to object payloads
+
+Rewrite each handler to take `()` or `({ ... })`, applying the callback table in `references/reference.md`. Renames: `onClose` → `onEditorClose`, `onError(type, message, body)` → `onEditorError({ source, message, detail })`, `onBlockSave/Remove/Edit` → `onSavedSectionSave/Remove/Edit`. Language payloads use `code`, not `lang`/`key`. Vue and Svelte events that passed a bare value (`count`, `html`, `title`, …) now pass an object too.
+
+The editor drops `onClose` and `onError` keys silently (they are reserved by the iframe bridge), so a leftover handler never fires. `onSave` that persists to a backend must return its promise; a rejection surfaces as a save error in the editor.
+
+Done when every handler in the inventory matches a v4 signature and none is named `onClose`, `onError`, or `onBlock*`.
+
+### 6. Rename configuration options
+
+Apply the config table in `references/reference.md`: `savedBlocks` → `savedSections`, `premadeBlocks` (+ `premadeBlocksNoOverwrite`) → `premadeSections`, `syncedRowsEnable` → `syncedSectionsEnabled`, `topBarOptions` → `hideTopbarControls` (invert the list), `defaultTemplateSettings.langs[].key` → `code`. Remove the deleted `api` endpoints (`SAVE`, `LOAD`, `PREVIEW`, `AUTOSAVE`, `GET_AUTOSAVE`, `SYNCED_ROWS`; `SAVED_BLOCKS` → `SAVED_SECTIONS`). `authorize.userId` must be a non-negative integer or match `[A-Za-z0-9_-]+`.
+
+Type the config as `IEmailConfig` (or the wrapper alias `IReactEmailOptions` / `IVueEmailOptions` / `ISvelteOptions`); `ITopolOptions` now means the factory props `{ config, ...callbacks }`.
+
+Done when the project typecheck (`tsc`, `vue-tsc`, or `svelte-check`) reports zero errors in the inventory files.
+
+### 7. Fix loader, environment, and layout
+
+Build-time overrides are `VITE_TOPOL_V4_URL`, `VITE_TOPOL_V4_DEV_URL`, `VITE_TOPOL_V4_STAGING_URL`; old `VITE_TOPOL_URL` values are ignored. Prefer the runtime `loaderUrl` init option for previews. Remove any `<script src=".../loader/build.js">` the host page inserts itself; the package loads it and rejects host-inserted scripts. One loader URL per page; switching environments needs a reload.
+
+The wrappers no longer render `#editor`, `#topol-editor-id`, or `#topol-email-editor-id`, and their container is no longer `position: absolute`. Update CSS and DOM code that targeted those ids, and size the container (React `style`/`className`, Vue `class`/`style`, Svelte parent element).
+
+Done when no v3 loader URL, `VITE_TOPOL_URL`, host-inserted loader script, or old container id remains in code, styles, env files, or HTML.
+
+### 8. Landing Page Editor (only when present or asked)
+
+Apps already using `LandingPageEditor` from `1.0.0-alpha.1`–`.8` must move its callbacks to object payloads and `onEditorError` / `onEditorClose`. Apps on 0.3.0 get it as new functionality; add it only when asked. Both are in `references/landing-page-editor.md`.
+
+### 9. Adopt nonce authentication or Topol Cloud (only when asked)
+
+Nonce authentication is standalone: passing `getNonce` switches the editor from the public-key authorize call to short-lived `nc_` nonces minted by a host server endpoint for the signed-in user. There is no separate option, and every feature stays external. Topol Cloud (`cloud.enabled`) is layered on top and requires `getNonce`. Both need a `pk_` public key. Follow the Nonce authentication and Topol Cloud sections of `references/reference.md`. Cloud-owned features silence `onSave` / `onTestSend` and ignore matching `api` endpoints.
+
+### 10. Verify
+
+1. Typecheck and build pass.
+2. The leftover grep in `references/reference.md` returns nothing.
+3. Run the app: `onInit` fires, a template loads, a save reaches the handler with the object payload, unmount logs no errors. Under StrictMode or a double mount exactly one iframe exists.
+4. Report every changed file and the behaviour changes the host must know: saves are awaited, `onInit` now means authenticated, a failed authentication requires destroying and recreating the editor, and the account's API key must work with Email Editor v4.
 
 ## Cannot be automated — always flag these
 
-- **CSS and DOM selectors.** The wrappers render into a new container id. If the
-  app styles or queries `#editor` (React) or `#topol-editor-id` (Vue), those
-  selectors must be updated to `#topol-email-editor-id`. Grep for them and list
-  every hit for the user; changing a selector can silently break layout, so
-  show the diff rather than assuming.
-- **`onTestSend` handlers.** `email` widened from `string` to `string | string[]`.
-  Any handler that passes it straight into an API call needs a real decision
-  (send to all, or take the first) — ask, don't guess.
-- **Runtime smoke test.** Nothing here proves the editor still loads; tell the
-  user to open the editor screen once.
+- **`onTestSend` handlers** coming from 0.3.0: `email` is `string | string[]`. A handler that feeds it to an API expecting one address needs a decision (send to all, or take the first). Ask, don't guess.
+- **Layout.** Removing the old container ids and absolute positioning can silently move the editor. Show the CSS diff and ask the user to check the screen.
+- **Templates and account.** Existing templates now open in Email Editor v4, and the API key must be enabled for v4. Tell the user to open and save one real template.
+- **Prerelease pin.** The user owns the decision to ship a prerelease to production. Flag it.
 
 ## Rules
 
 - Never edit files under `node_modules/`.
-- Do not "upgrade" unrelated dependencies while you are in the lockfile.
-- If the app pins `@topol.io/editor` 0.x deliberately (comment, renovate config),
-  stop and ask before bumping.
+- Do not upgrade unrelated dependencies while in the lockfile.
+- Do not silence the migration's type errors with `any`; they mark the code that must change.

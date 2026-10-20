@@ -4,54 +4,67 @@ Peer dep: `vue` `^3.2.25`. Ships both editors as components. Vue 2 apps must use
 the core package (`vanilla.md`).
 
 ```bash
-npm install @topol.io/editor-vue@<resolved-v1-version>
+npm install @topol.io/editor-vue@<resolved 1.x alpha version>
 ```
 
 ## Email Editor
 
 ```vue
 <script setup lang="ts">
-import { EmailEditor, type IVueEmailOptions, type ISaveData } from '@topol.io/editor-vue';
+import { ref } from 'vue';
+import { EmailEditor, type IEmailCallbacks, type IVueEmailOptions } from '@topol.io/editor-vue';
 
 const options: IVueEmailOptions = {
   authorize: {
     apiKey: import.meta.env.VITE_TOPOL_API_KEY,
-    userId: currentUser.id,
+    userId: currentUser.id,   // integer or [A-Za-z0-9_-]+
   },
 };
 
-const handleSave = ({ json, html, mutations, syncedSections }: ISaveData) => {
-  // TODO: persist the template — application decision
+// Handlers whose result the editor must await go in the `callbacks` prop.
+const callbacks: IEmailCallbacks = {
+  async onSave({ json, html, mutations, syncedSections }) {
+    // TODO: persist the template — application decision. A rejection shows a save error.
+  },
 };
+
+const editorRef = ref<InstanceType<typeof EmailEditor>>();
+const save = () => editorRef.value?.getEditor()?.save();
 </script>
 
 <template>
+  <button @click="save">Save</button>
   <EmailEditor
+    ref="editorRef"
     :options="options"
-    @onSave="handleSave"
-    @onError="({ type, message, responseBody }) => console.error(type, message, responseBody)"
+    :callbacks="callbacks"
+    @on-editor-error="({ source, message, detail }) => console.error(source, message, detail)"
+    @ready="(editor) => { /* iframe rendered; instance available */ }"
   />
 </template>
 ```
 
-- Events are declared in camelCase (`onSave`, `onSaveAndClose`, `onTestSend`, …).
-  `@onSave` and the kebab form `@on-save` both bind.
-- **Every event payload is a single object**, not positional args:
-  `onSave`/`onSaveAndClose` → `{ json, html, mutations, syncedSections }`,
-  `onTestSend` → `{ email, json, html }`, `onError` → `{ type, message, responseBody }`,
-  `onBannerClick` → `{ json, html }`, the language events → `{ lang, mutations }`.
-  Simple events pass their value directly (`onBlockRemove` → `blockId`,
-  `onUndoChange` → `count`, `onAlert` → notification).
-- `options` is `Omit<ITopolOptions, 'id' | 'callbacks'>`; the component renders
-  `<div id="topol-email-editor-id">` at `position: absolute; width: 100%; height: 100vh`.
-- `stage` prop defaults to `'production'`.
+- `options` is the config (`IEmailConfig`).
+- **`callbacks` prop vs events.** Events (`@on-save`, `@on-editor-error`, …)
+  carry the exact core object payload but are notifications: their return values
+  are not awaited. Put `onSave` / `onSaveAndClose` that persist asynchronously,
+  and `getNonce`, in the `callbacks` prop. If both exist, the callback runs first
+  and its result goes back to the editor.
+- `@on-save-and-close` is registered only when supplied; without it (and without
+  `callbacks.onSaveAndClose`) the runtime's default save-and-close works.
+- The template ref exposes `getEditor()` (instance or `null`); `@ready` delivers
+  the instance once the iframe has rendered. `onInit` means authenticated.
+- The component renders a plain `div` (`width: 100%; height: 100vh`, no id);
+  `class` / `style` attributes fall through to it.
+- Props: `options`, `callbacks`, `stage`, `loaderUrl` (leave the last two unset in
+  production).
 
 ## Landing Page Editor
 
 ```vue
 <script setup lang="ts">
 import { ref } from 'vue';
-import { LandingPageEditor, type IVueLandingPageOptions, type ISaveData } from '@topol.io/editor-vue';
+import { LandingPageEditor, type IVueLandingPageOptions } from '@topol.io/editor-vue';
 
 const editor = ref<InstanceType<typeof LandingPageEditor> | null>(null);
 
@@ -61,35 +74,36 @@ const options: IVueLandingPageOptions = {
 
 const load = () => editor.value?.load(templateJson);
 const save = () => editor.value?.save();
-const handleSave = ({ json, html }: ISaveData) => {/* TODO: persist */};
 </script>
 
 <template>
   <button @click="load">Load</button>
   <button @click="save">Save</button>
-  <LandingPageEditor ref="editor" :options="options" @onSave="handleSave" />
+  <LandingPageEditor
+    ref="editor"
+    :options="options"
+    @on-save="({ json, html }) => { /* TODO: persist */ }"
+    @on-editor-error="({ source, message }) => console.error(source, message)"
+  />
 </template>
 ```
 
 - `options` is the LPE **config** object only; the component wraps it as
   `{ config, ...callbacks }` and calls `render()` itself.
-- `load(template)` and `save()` are exposed via `defineExpose` — reach them
-  through a template ref. Unmount to destroy.
-- Container id is `topol-landing-page-editor-id`.
+- `load(template)` and `save()` are exposed via the template ref. Unmount to
+  destroy.
+- Container is `#topol-landing-page-editor-id` at `position: absolute;
+  width: 100%; height: 100vh`.
 - LPE has no `onTestSend`, no `updateTestingEmailAddresses`, and no language events.
-- The LPE `onSave` / `onSaveAndClose` payload is typed `ISaveData` but only ever
-  contains `{ json, html }` — `mutations` and `syncedSections` are email-only and
-  arrive `undefined`. Destructure just the two fields.
 
 ## Lifecycle
 
-Both components init in `onMounted` and destroy in `onBeforeUnmount`. Changing
-`options` after mount does not re-initialize — use
-`CoreEmailEditor.updateOptions(partial)` (re-exported from this package) for
-runtime config changes. Render only one editor component at a time: each mounts
-an absolutely-positioned full-viewport container.
+Both components init in `onMounted` and destroy on unmount (including while init
+is still pending). Configuration and which handlers are present are captured on
+mount; remount (`:key`) to change them, or call
+`editorRef.value?.getEditor()?.updateOptions(partial)` for Email Editor config.
 
 ## Deprecated
 
-The `TopolEditor` component still exists as an alias and logs a console
-deprecation warning on mount. Use `EmailEditor`.
+`TopolEditor` is a deprecated alias of `EmailEditor` with the same props and
+events. Use `EmailEditor`.
