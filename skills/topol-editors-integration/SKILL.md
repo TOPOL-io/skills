@@ -50,7 +50,7 @@ install both a wrapper and a differently-versioned core.
    npm view @topol.io/editor-react dist-tags   # alpha must be 1.0.0-alpha.11+ (core, -vue, -svelte: 1.0.0-alpha.10+)
    ```
 
-   If `alpha` shows `2.0.0-alpha.x`, the 1.x v4 release is not published yet:
+   If `alpha` points below those versions, the 1.x v4 release is not published yet:
    stop and tell the user. Tell the user which prerelease you installed and that
    details can still change before the final 1.0.
 

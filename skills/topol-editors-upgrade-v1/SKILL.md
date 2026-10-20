@@ -8,8 +8,7 @@ description: 'Upgrade a host app from `@topol.io/editor*` 0.x or an early 1.x al
 > **Versions.** From `1.0.0-alpha.10` (`@topol.io/editor-react` `1.0.0-alpha.11`)
 > the 1.x line embeds Email Editor **v4** and changes the API shape. `0.3.0`
 > (`latest`) and `1.0.0-alpha.1`–`.9` (editor-react up to `.10`) use the v3 API
-> and migrate the same way. `2.0.0-alpha.x` was the same v4 API under a different
-> number and is superseded. The Landing Page Editor API is not affected.
+> and migrate the same way. The Landing Page Editor API is not affected.
 
 The v4 API: `EmailEditor.init` takes `{ config, ...callbacks }` and returns an independent instance; nothing lives on `window` any more. Every callback receives zero arguments or one object. Reusable blocks are sections. Language mutations use `code`. Only a v4 loader works. `LandingPageEditor` is untouched.
 
@@ -29,7 +28,7 @@ grep -rnE "@topol\.io/editor|TopolPlugin|TopolEditor|EmailEditor|LandingPageEdit
 
 Record the installed version of each Topol package and, for each hit, its kind: dependency, init/mount, method call, callback handler, config option, type import, CSS/DOM selector, loader script or env var. Note which framework wrapper (or plain core) is used and whether the app uses React StrictMode, SSR, or several editors per page.
 
-If every Topol package is already at `1.0.0-alpha.10`+ (editor-react `1.0.0-alpha.11`+), there is nothing to migrate. If it is on `2.0.0-alpha.x`, the code is already v4: only re-pin the versions (step 2) and stop.
+If every Topol package is already at `1.0.0-alpha.10`+ (editor-react `1.0.0-alpha.11`+), there is nothing to migrate.
 
 Done when every file that imports a Topol package is listed, and every identifier from the rename tables in `references/reference.md` that appears in the app has a line in the inventory.
 
@@ -44,7 +43,7 @@ npm install @topol.io/editor-react@<alpha version>   # wrappers pull in the matc
 npm ls @topol.io/editor
 ```
 
-If `alpha` still shows `2.0.0-alpha.x`, the 1.x v4 release is not published yet: stop and tell the user. If the app also depends on the core directly, pin it to the version the wrapper depends on (`npm view @topol.io/editor-react@<version> dependencies`). Use the app's own package manager (detect it from the lockfile). If the app pins `@topol.io/editor` 0.x deliberately (comment, renovate config), ask before bumping.
+If `alpha` points below `1.0.0-alpha.10` (editor-react `1.0.0-alpha.11`), the 1.x v4 release is not published yet: stop and tell the user. If the app also depends on the core directly, pin it to the version the wrapper depends on (`npm view @topol.io/editor-react@<version> dependencies`). Use the app's own package manager (detect it from the lockfile). If the app pins `@topol.io/editor` 0.x deliberately (comment, renovate config), ask before bumping.
 
 Done when `npm ls @topol.io/editor` shows a single 1.x entry at `1.0.0-alpha.10` or later.
 

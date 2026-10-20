@@ -40,8 +40,7 @@ project's own typecheck, and reports the decisions only a human can make.
 
 > **Prereleases.** 1.x is on the `alpha` dist-tag; `latest` is still 0.3.0 (Email Editor v3 API).
 > Email Editor v4 starts at `1.0.0-alpha.10` (`@topol.io/editor-react` `1.0.0-alpha.11`); earlier
-> 1.x alphas use the v3 API, and `2.0.0-alpha.x` is superseded. The skills pin the exact
-> version; they never trust `latest` or `^`.
+> 1.x alphas use the v3 API. The skills pin the exact version; they never trust `latest` or `^`.
 
 ## Install
 

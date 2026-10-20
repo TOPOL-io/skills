@@ -8,10 +8,9 @@ Source of truth: the 1.x package READMEs on npm and the exported types (`IEmailC
 | ---------------------------------------------------- | ---------------------------- | -------------- | -------------------------------------------------------------------------- |
 | `0.3.0`                                              | `latest`                     | v3             | `TopolPlugin.init({ id, authorize, callbacks })`, positional callback args |
 | `1.0.0-alpha.1`–`.9` (editor-react up to `.10`)      | none (superseded)            | v3             | same, plus `EmailEditor` alias, multilanguage methods, `LandingPageEditor` |
-| `2.0.0-alpha.1`–`.3`                                 | none (superseded)            | v4             | same as the row below                                                      |
 | `1.0.0-alpha.10`+ (editor-react `1.0.0-alpha.11`+)   | `alpha`                      | v4             | `EmailEditor.init({ config, ...callbacks })` → instance, object payloads   |
 
-"Before" below means the v3 API (`0.3.0` and the early 1.x alphas). "After" means 1.x from `1.0.0-alpha.10` (editor-react `1.0.0-alpha.11`). An app on `2.0.0-alpha.x` already uses the v4 API: only its version pins change, from `2.0.0-alpha.x` to the current 1.x `alpha`.
+"Before" below means the v3 API (`0.3.0` and the early 1.x alphas). "After" means 1.x from `1.0.0-alpha.10` (editor-react `1.0.0-alpha.11`).
 
 `TopolPlugin` (core) and `TopolEditor` (wrappers) still exist as naming aliases of the new API. They are not v3 adapters: code using them must still be migrated.
 
