@@ -32,15 +32,16 @@ Skill names carry the **npm major**; the table maps it to the runtime of each ed
 
 | Skill | Purpose | npm `@topol.io/editor*` | Email Editor | Landing Page Editor |
 | --- | --- | --- | --- | --- |
-| [`topol-editors-integration`](skills/topol-editors-integration/SKILL.md) | First-time integration: picks the package for the framework, wires options, callbacks and the API key | 1.x | v3 | v1 |
-| [`topol-editors-upgrade-v1`](skills/topol-editors-upgrade-v1/SKILL.md) | Upgrade 0.x → 1.x: split into `EmailEditor` / `LandingPageEditor` exports, renamed types and container ids | 0.x → 1.x | v3 (unchanged) | v1 (new) |
-| [`topol-editors-upgrade-v2`](skills/topol-editors-upgrade-v2/SKILL.md) | Upgrade 0.x/1.x → 2.x: instance API, object callback payloads, section renames, v4 loader, optional nonce authentication and Topol Cloud | 0.x/1.x → 2.x | v3 → v4 | not affected |
+| [`topol-editors-integration`](skills/topol-editors-integration/SKILL.md) | First-time integration: picks the package for the framework, wires options, callbacks and the API key | 1.x (`1.0.0-alpha.10`+) | v4 | v1 |
+| [`topol-editors-upgrade-v1`](skills/topol-editors-upgrade-v1/SKILL.md) | Upgrade 0.x or an early 1.x alpha → 1.x: instance API, object callback payloads, section renames, v4 loader, optional nonce authentication and Topol Cloud | 0.x / early 1.x alpha → 1.x | v3 → v4 | v1 (new for 0.x) |
 
 Each skill covers the core package and the React, Vue and Svelte wrappers, runs the
 project's own typecheck, and reports the decisions only a human can make.
 
-> **Prereleases.** 1.x has no dist-tag (`latest` is still 0.3.0, `alpha` is 2.0.0-alpha.x).
-> The skills list published versions and pin the exact one; they never trust `latest` or `^`.
+> **Prereleases.** 1.x is on the `alpha` dist-tag; `latest` is still 0.3.0 (Email Editor v3 API).
+> Email Editor v4 starts at `1.0.0-alpha.10` (`@topol.io/editor-react` `1.0.0-alpha.11`); earlier
+> 1.x alphas use the v3 API, and `2.0.0-alpha.x` is superseded. The skills pin the exact
+> version; they never trust `latest` or `^`.
 
 ## Install
 
@@ -71,8 +72,7 @@ Run inside the app that embeds the editor:
 ```
 > add the Topol email editor to this app
 > add a Topol landing page editor screen
-> upgrade this app to @topol.io/editor 1.x
-> upgrade this app to @topol.io/editor 2.x (Email Editor v4)
+> upgrade this app to @topol.io/editor 1.x (Email Editor v4)
 ```
 
 ## Documentation
