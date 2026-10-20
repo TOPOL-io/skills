@@ -1,7 +1,7 @@
 {
   "name": "topol-editors",
-  "description": "Official Topol.io skills for the @topol.io/editor* npm packages: integrate the Email Editor (v4) and Landing Page Editor on 1.x, and upgrade 0.x or early 1.x alpha integrations to 1.x (Email Editor v4).",
-  "version": "3.0.0",
+  "description": "Official Topol.io skills for the Topol editors: integrate the Email Editor (v4) and Landing Page Editor with the @topol.io/editor* 1.x npm packages, upgrade 0.x or early 1.x alpha npm integrations to 1.x, and upgrade script-tag Email Editor integrations from v3 to v4.",
+  "version": "3.1.0",
   "author": {
     "name": "Topol.io",
     "url": "https://topol.io"
