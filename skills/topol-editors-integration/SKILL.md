@@ -1,13 +1,15 @@
 ---
 name: topol-editors-integration
-description: Integrate the Topol Email Editor or Landing Page Editor into an app for the first time, on the `@topol.io/editor*` 1.x npm packages (core, -react, -vue, -svelte; Email Editor v3 runtime, Landing Page Editor v1). Use when the user wants to add, embed, install, or set up a Topol editor / drag-and-drop email builder / landing page builder, asks "how do I integrate Topol", or wants a Topol editor screen in a React, Next.js, Vue, Svelte, or plain JS/TS app. For apps already on `@topol.io/editor*` 0.x, use topol-editors-upgrade-v1 instead.
+description: 'Integrate the Topol Email Editor or Landing Page Editor into an app for the first time, on the `@topol.io/editor*` 1.x npm packages from `1.0.0-alpha.10` (core, -react, -vue, -svelte; Email Editor v4, Landing Page Editor v1). Use when the user wants to add, embed, install, or set up a Topol editor / drag-and-drop email builder / landing page builder, asks "how do I integrate Topol", or wants a Topol editor screen in a React, Next.js, Vue, Svelte, or plain JS/TS app. For apps already on `@topol.io/editor*` 0.x or an early 1.x alpha, use topol-editors-upgrade-v1 instead.'
 ---
 
 # Integrate a Topol editor (`@topol.io/editor*` 1.x)
 
-> **Versions.** `1.x` here is the npm major of `@topol.io/editor*`. It embeds
-> Email Editor **v3** and Landing Page Editor **v1**. `@topol.io/editor*` 2.x
-> (Email Editor v4) is a different API; see `topol-editors-upgrade-v2`.
+> **Versions.** `1.x` here is the npm major of `@topol.io/editor*`, from
+> `1.0.0-alpha.10` (`@topol.io/editor-react` `1.0.0-alpha.11`). It embeds Email
+> Editor **v4** and Landing Page Editor **v1**. `latest` (`0.3.0`) and the earlier
+> 1.x alphas use the older Email Editor v3 API; for apps on those, use
+> `topol-editors-upgrade-v1`.
 
 Add the Topol **Email Editor**, the **Landing Page Editor**, or both to a host
 application. Always integrate through the npm packages; the CDN script tag is a
@@ -35,52 +37,60 @@ install both a wrapper and a differently-versioned core.
    (`pnpm-lock.yaml` → pnpm, `yarn.lock` → yarn, `package-lock.json` → npm,
    `bun.lockb` → bun). Use the app's own package manager for every install.
 
-   If the app already imports `@topol.io/editor*` at 0.x, this is an upgrade,
-   not an integration — stop and use the `topol-editors-upgrade-v1` skill.
+   If the app already imports `@topol.io/editor*` at 0.x or below
+   `1.0.0-alpha.10`, this is an upgrade, not an integration — stop and use the
+   `topol-editors-upgrade-v1` skill.
 
-2. **Resolve the 1.x version to install.** 1.x is a prerelease. The npm
-   `latest` tag still points at 0.3.0 and the `alpha` tag has moved on to
-   2.0.0-alpha.x, so neither `npm install @topol.io/editor` nor `@alpha`
-   gives you 1.x. Always list the published versions first:
-
-   ```bash
-   npm view @topol.io/editor versions --json
-   ```
-
-   Install the newest `1.0.0-alpha.N` in that list — as of this writing
-   **`1.0.0-alpha.9`**, but check, do not assume. 1.x alphas have introduced
-   no breaking changes between each other. Tell the user which prerelease you
-   installed and that the 1.x API shape is stable but details can still change.
-
-3. **Install.** Every `@topol.io/*` package must be on the exact same version:
+2. **Resolve the 1.x version to install.** 1.x is a prerelease on the `alpha`
+   dist-tag; `latest` still points at `0.3.0` (old API), so a bare
+   `npm install @topol.io/editor` gives you the wrong one. Each package has its
+   own number (editor-react is one ahead), so resolve the package you install:
 
    ```bash
-   npm install @topol.io/editor-react@1.0.0-alpha.9    # example: React app
+   npm view @topol.io/editor-react dist-tags   # alpha must be 1.0.0-alpha.11+ (core, -vue, -svelte: 1.0.0-alpha.10+)
    ```
 
-   Pin the exact prerelease version (no `^`) — a caret range across prerelease
-   tags resolves unpredictably.
+   If `alpha` shows `2.0.0-alpha.x`, the 1.x v4 release is not published yet:
+   stop and tell the user. Tell the user which prerelease you installed and that
+   details can still change before the final 1.0.
+
+3. **Install, pinned exactly** (no `^` — caret ranges across prerelease tags
+   resolve unpredictably):
+
+   ```bash
+   npm install @topol.io/editor-react@<alpha version>    # example: React app
+   npm ls @topol.io/editor                              # must show a single entry
+   ```
+
+   If the app also needs the core package directly (for example the Landing Page
+   Editor in Svelte), pin it to the version the wrapper depends on
+   (`npm view @topol.io/editor-svelte@<version> dependencies`).
 
 4. **Read the reference for the target framework** — write the integration from
-   it, not from memory. The two editors have genuinely different APIs.
+   it, not from memory or older examples. The v3-era API (`TopolPlugin.init({ id,
+   callbacks })`, positional callbacks) found in older docs and blog posts does
+   not work with these versions.
    - `references/react.md` — `@topol.io/editor-react`, including Next.js/SSR
    - `references/vue.md` — `@topol.io/editor-vue`
    - `references/svelte.md` — `@topol.io/editor-svelte` (+ core for LPE)
    - `references/vanilla.md` — core `@topol.io/editor`, and the no-build CDN path
-   - `references/options.md` — shared config surface, callbacks, imperative
-     methods, and the stage/loader behaviour
+   - `references/options.md` — shared config, callbacks, instance methods,
+     stage/loader behaviour, nonce authentication and Cloud
 
 5. **Wire the API key from configuration, never a literal.** Read the key from
    the app's existing env mechanism (`import.meta.env.VITE_*`,
    `process.env.NEXT_PUBLIC_*`, …) and add the variable to `.env.example` if the
    project has one. If no key is available, scaffold the integration with the
    env var wired up and tell the user where to put the key — do not invent a
-   placeholder that looks real.
+   placeholder that looks real. Use a URL-safe `userId` (integer or
+   `[A-Za-z0-9_-]+`); `init` rejects anything else.
 
 6. **Give the editor a sized container.** The editor fills its container and
    renders an iframe; a container with no height renders as a blank page. The
-   wrappers ship their own absolutely-positioned full-viewport div, so mount
-   them on a route/page that can own the whole viewport, not inside a small card.
+   Email Editor wrappers render `width: 100%; height: 100vh` by default (React
+   `style`/`className` and Vue `class`/`style` override it; size Svelte's parent).
+   The Landing Page Editor wrappers render an absolutely-positioned full-viewport
+   div, so mount them on a route/page that can own the whole viewport.
 
 7. **Verify.** Run the project's own checks and report the real output:
 
@@ -95,14 +105,17 @@ install both a wrapper and a differently-versioned core.
 
 - **The API key is public.** It ships to the browser by design. Any storage the
   editor talks to must be secured server-side via the `api` and
-  `apiAuthorizationHeader` options (`references/options.md`), not by hiding the
-  key. Say this out loud; do not let the user assume the key is a secret.
-- **Persisting templates.** `onSave` hands you `json` and `html`; where they get
-  stored is an application decision. Wire the callback and leave a clearly
-  marked TODO rather than inventing an endpoint.
+  `apiAuthorizationHeader` options (`references/options.md`), or by nonce
+  authentication with a server-side `sk_` secret. Say this out loud; do not let
+  the user assume the key is a secret.
+- **Persisting templates.** `onSave` hands you `{ json, html }`; where they get
+  stored is an application decision. Wire the callback (returning its promise)
+  and leave a clearly marked TODO rather than inventing an endpoint.
 - **Runtime smoke test.** Nothing here proves the editor loads — the loader
   script is fetched at runtime and rejects an invalid key in the browser. Tell
-  the user to open the page once and check the console.
+  the user to open the page once and check that `onInit` fires and the console
+  is clean.
+- **Account.** The API key must be enabled for Email Editor v4.
 - **Prerelease pin.** The user owns the decision to ship a prerelease to
   production. Flag it.
 
@@ -112,6 +125,8 @@ install both a wrapper and a differently-versioned core.
 - Never copy an API key out of another project, example, or this repo's docs.
 - Do not upgrade unrelated dependencies while installing Topol.
 - Do not add a CDN `<script>` tag to an app that has a bundler — use the package.
-- Prefer the modern names (`EmailEditor`, `LandingPageEditor`). `TopolPlugin`
-  and the `TopolEditor` component are deprecated 0.x aliases that log warnings;
-  the only exception is Svelte, where `TopolEditor` is still the real name.
+  The package loads the editor script itself and rejects a host-inserted one.
+- Use the modern names (`EmailEditor`, `LandingPageEditor`). `TopolPlugin` and
+  `TopolEditor` are deprecated naming aliases of the same API.
+- Never name a handler `onError` or `onClose`; they never fire. Use
+  `onEditorError` / `onEditorClose`.

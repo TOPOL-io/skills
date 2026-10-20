@@ -1,62 +1,70 @@
 # Svelte — `@topol.io/editor-svelte`
 
 Peer dep: `svelte` `^4.2.8`. **Email Editor only** — there is no Landing Page
-Editor component for Svelte in v1. For an LPE in a Svelte app, drive the core
-package directly (see the end of this file).
+Editor component for Svelte. For an LPE in a Svelte app, drive the core package
+directly (see the end of this file).
 
 ```bash
-npm install @topol.io/editor-svelte@<resolved-v1-version>
+npm install @topol.io/editor-svelte@<resolved 1.x alpha version>
 ```
 
 ## Email Editor
 
-The component is named `TopolEditor` here — unlike React/Vue, this is **not**
-deprecated in Svelte and there is no `EmailEditor` alias.
-
 ```svelte
 <script lang="ts">
-  import { TopolEditor, type ITopolOptions } from '@topol.io/editor-svelte';
+  import { EmailEditor, type ISvelteOptions, type IEmailCallbacks } from '@topol.io/editor-svelte';
 
-  const options: ITopolOptions = {
+  const options: ISvelteOptions = {
     authorize: {
       apiKey: import.meta.env.VITE_TOPOL_API_KEY,
-      userId: currentUser.id,
+      userId: currentUser.id,   // integer or [A-Za-z0-9_-]+
     },
   };
 
-  const handleSave = (event: CustomEvent) => {
-    const { json, html, mutations, syncedSections } = event.detail;
-    // TODO: persist the template — application decision
+  // Handlers whose result the editor must await go in the `callbacks` prop.
+  const callbacks: IEmailCallbacks = {
+    async onSave({ json, html, mutations, syncedSections }) {
+      // TODO: persist the template — application decision. A rejection shows a save error.
+    },
   };
+
+  let component: EmailEditor;
+  const save = () => component.getEditor()?.save();
 </script>
 
-<TopolEditor {options} on:onSave={handleSave} />
+<button on:click={save}>Save</button>
+<div style="height: 100vh">
+  <EmailEditor
+    bind:this={component}
+    {options}
+    {callbacks}
+    on:onEditorError={(e) => console.error(e.detail.source, e.detail.message)}
+    on:ready={(e) => { const editor = e.detail; }}
+  />
+</div>
 ```
 
-- Svelte 4 event dispatcher: listen with `on:onSave`, `on:onError`, … and read
-  the payload from `event.detail`.
-- Payloads are single objects, as in Vue: `onSave`/`onSaveAndClose` →
-  `{ json, html, mutations, syncedSections }`, `onTestSend` → `{ email, json, html }`,
-  `onError` → `{ type, message, responseBody }`. Note `onLanguageSelected` and
-  `onGetMutations` dispatch their value directly, not wrapped.
-- `options` is `Omit<ITopolOptions, 'id' | 'callbacks'>` (exported as
-  `ISvelteOptions`, re-exported as `ITopolOptions`).
-- Container id is **`topol-editor-id`** (not `topol-email-editor-id` — the Svelte
-  wrapper kept the 0.x id), rendered at `position: absolute; width: 100%; height: 100vh`.
-- `stage` prop defaults to `'production'`.
-- Inits in `onMount`, calls `TopolPlugin.destroy()` in `onDestroy`.
-
-The package also re-exports `TopolPlugin` for the imperative methods:
-
-```ts
-import { TopolPlugin } from '@topol.io/editor-svelte';
-TopolPlugin.save();
-```
+- `options` is the config (`IEmailConfig`, exported as `ISvelteOptions`).
+- Events are dispatched with Svelte 4's dispatcher: `on:onSave`,
+  `on:onEditorError`, … with the exact core object payload in `event.detail`
+  (language events: `event.detail.code`). They are notifications: put `onSave` /
+  `onSaveAndClose` that persist asynchronously, and `getNonce`, in the `callbacks`
+  prop. If both exist, the callback runs first and its result goes back to the
+  editor.
+- `bind:this` + `getEditor()` returns the instance (or `null`); `on:ready`
+  delivers it once the iframe has rendered. `onInit` means authenticated.
+- The component takes no attributes; it renders `width: 100%; height: 100vh`, so
+  size its parent element.
+- Props: `options`, `callbacks`, `stage`, `loaderUrl` (leave the last two unset in
+  production).
+- `ITopolOptions` exported from this package is the core factory type
+  `{ config, ...callbacks }`, not the component options — use `ISvelteOptions`.
+- `TopolEditor` is an alias of `EmailEditor`; prefer `EmailEditor`.
 
 ## Landing Page Editor in Svelte
 
-No component exists — install the core package alongside the wrapper (same exact
-version) and drive the instance yourself:
+No component exists — install the core package alongside the wrapper (the same
+version the wrapper depends on) and drive the instance yourself:
 
 ```svelte
 <script lang="ts">
@@ -70,9 +78,9 @@ version) and drive the instance yourself:
       config: {
         authorize: { apiKey: import.meta.env.VITE_TOPOL_API_KEY, userId: currentUser.id },
       },
-      onSave(json, html) {/* TODO: persist */},
+      async onSave({ json, html }) {/* TODO: persist */},
     });
-    instance.render('#lpe');
+    await instance.render('#lpe');
   });
 
   onDestroy(() => instance?.destroy());
@@ -85,7 +93,6 @@ See `vanilla.md` for the full core API.
 
 ## SvelteKit
 
-Init must not run on the server. `onMount` already guarantees that, so the
-component is SvelteKit-safe as written — but do not move the import to a
-top-level module that runs during SSR side effects, and keep the editor page
-client-rendered.
+Init must not run on the server. The component initializes in `onMount`, so it is
+SvelteKit-safe as written — keep the editor page client-rendered and do not call
+the core `init()` from module scope.
