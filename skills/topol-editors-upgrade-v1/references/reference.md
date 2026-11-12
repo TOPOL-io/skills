@@ -338,6 +338,29 @@ Renamed with the old name still accepted (deprecated; the new name wins when bot
 
 A removed or misspelled option left in the config is ignored without an error in plain JavaScript; the typecheck is what finds it.
 
+### `textOverride` keys
+
+| Before (v3 API) | After (1.x, v4) |
+| --- | --- |
+| `saved_blocks*` | `saved_sections*` |
+| `premade_blocks` | `premade_sections` |
+| `save_as_block` | `save_as_section` |
+| `synced_rows` | `synced_sections` |
+| `*_synced_row*` | `*_synced_section*` |
+
+The keys are plain strings, so the typecheck does not find a stale one; grep for them.
+
+### Changed defaults
+
+| Option | v3 | v4 |
+| --- | --- | --- |
+| `smartMergeTags.enabled` | `false` | `true` |
+| `mobileFirstEnabled` | `false` | `true` |
+| `premadeTemplates` | `false` | `true` |
+| Selection-panel expand button | hidden (`showControlPanelExpand: false`) | shown; hide it with `hideSelectionPanelExpand: true` |
+
+The selection panel also starts hidden when the iframe is narrower than 1024 px. Keeping or pinning these is a product decision; ask the user.
+
 ## Type table
 
 The old names are removed, not aliased. Data going into or out of an editor is `IEmail*` / `ILandingPage*`; types of the editor object are `IEmailEditor*` / `ILandingPageEditor*`.
@@ -382,6 +405,19 @@ Apps coming from the v3 API that host their own `api.*` endpoints or set a Conte
 - CSP / Permissions-Policy: replace `v3.email-assets.topol.io` with `v4.email-assets.topol.io` in `script-src`, `frame-src` and feature allowlists.
 
 Details: <https://docs.topol.io/email-editor/guide/v4-migration.html#backend-and-security-policy>.
+
+Deploy order: the autosave route change must be live before the upgraded frontend ships. Autosave params and bodies (`key`, `hostname`, `templateId`, `uuid`, `definition`, `current_user_id`) are unchanged, and any 2xx is accepted. Before the first autosave of a session, v4 lists autosaves, reads the newest, and may create one extra "initial state" autosave. Autosave is skipped while an explicit save is running.
+
+## Behaviour changes
+
+Runtime differences between Email Editor v3 and v4 that no rename reveals. Report them to the user of an app coming from the v3 API.
+
+- **Awaited saves.** A Promise returned from `onSave` / `onSaveAndClose` keeps the saving indicator up until it settles. A rejection shows a saving error and reports `onEditorError({ source: "save" })`. After 30 s the editor stops waiting and shows an "unconfirmed" notice without `onEditorError`.
+- **Unsaved flag.** It clears only after `onSave` settles and only if the template did not change meanwhile; v3 cleared it after rendering.
+- **Save & Close without `onSaveAndClose`.** v4 calls `onSave` and then closes the editor (removes the iframe); v3 did nothing.
+- **Window-bar close without `onEditorClose`.** v4 closes the editor itself; v3 needed the callback. If `onEditorClose` rejects, the editor also closes itself.
+- **Failed init.** Method calls made before the editor is ready are queued and resolve after initialization. If authentication or init fails, the host gets `onEditorError({ source: "authorize" })` and then `onEditorError({ source: "init" })`, and the queued calls never settle. Recover with `destroy()` and a new `init()`.
+- **Hostname for authorization.** Taken from the parent page through the iframe bridge, so a strict `Referrer-Policy` no longer breaks authorization.
 
 ## Nonce authentication
 
@@ -437,6 +473,13 @@ grep -rnE "\bTopolPlugin\b|\bTopolEditor\b|\bid: *['\"]#|callbacks: *\{|savedBlo
 ```
 
 Expected false positives to read and dismiss: `callbacks: {` on a line that builds the Vue `callbacks` prop, and the app's own `onError(` / `onClose(` functions that are not Topol handlers.
+
+Stale `textOverride` keys (apps coming from the v3 API):
+
+```sh
+grep -rnE "saved_blocks|premade_blocks|save_as_block|synced_row" . \
+  --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=.git
+```
 
 Deprecated names — still working, but the upgrade should leave none behind:
 

@@ -27,16 +27,18 @@
 ## Skills
 
 The Topol editors (Email Editor, Landing Page Editor, more to come) ship together in the
-`@topol.io/editor*` npm packages (`editor`, `editor-react`, `editor-vue`, `editor-svelte`).
-Skill names carry the **npm major**; the table maps it to the runtime of each editor.
+`@topol.io/editor*` npm packages (`editor`, `editor-react`, `editor-vue`, `editor-svelte`), and the
+Email Editor can also be embedded with a plain `<script>` tag. Names of the npm skills carry the
+**npm major**; the table maps it to the runtime of each editor.
 
 | Skill | Purpose | npm `@topol.io/editor*` | Email Editor | Landing Page Editor |
 | --- | --- | --- | --- | --- |
 | [`topol-editors-integration`](skills/topol-editors-integration/SKILL.md) | First-time integration: picks the package for the framework, wires options, callbacks and the API key | 1.x (`1.0.0-alpha.11`+) | v4 | v1 |
 | [`topol-editors-upgrade-v1`](skills/topol-editors-upgrade-v1/SKILL.md) | Upgrade 0.x or an earlier 1.x alpha → 1.x: instance API, object callback payloads, section and `entityId` renames, removed aliases and renamed types, Svelte 5 callback props, v4 loader, optional nonce authentication and Topol Cloud | 0.x / earlier 1.x alpha → 1.x | v3 → v4 | v1 (new for 0.x) |
+| [`topol-editors-upgrade-email-v4`](skills/topol-editors-upgrade-email-v4/SKILL.md) | Upgrade a script-tag integration (no npm): v4 loader and `TopolEmailEditor` instance, object callback payloads, renamed options and callbacks, changed defaults, autosave endpoints and CORS | — (script tag) | v3 → v4 | not affected |
 
-Each skill covers the core package and the React, Vue and Svelte wrappers, runs the
-project's own typecheck, and reports the decisions only a human can make.
+The npm skills cover the core package and the React, Vue and Svelte wrappers. Every skill
+runs the project's own checks and reports the decisions only a human can make.
 
 > **Prereleases.** 1.x is on the `alpha` dist-tag; `latest` is still 0.3.0 (Email Editor v3 API).
 > The skills target `1.0.0-alpha.11` and later (`@topol.io/editor-react` `1.0.0-alpha.12`). Earlier
@@ -74,6 +76,7 @@ Run inside the app that embeds the editor:
 > add the Topol email editor to this app
 > add a Topol landing page editor screen
 > upgrade this app to @topol.io/editor 1.x (Email Editor v4)
+> upgrade our script-tag Topol email editor from v3 to v4
 ```
 
 ## Documentation

@@ -12,7 +12,7 @@
     {
       "source": "./",
       "name": "topol-editors",
-      "description": "Integrate the Topol Email Editor and Landing Page Editor via the @topol.io/editor* npm packages, and upgrade existing integrations to 1.x (Email Editor v4).",
+      "description": "Integrate the Topol Email Editor and Landing Page Editor via the @topol.io/editor* npm packages, upgrade npm integrations to 1.x, and upgrade script-tag integrations to Email Editor v4.",
       "category": "development"
     }
   ]
