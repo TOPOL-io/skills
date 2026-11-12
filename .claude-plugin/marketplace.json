@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Official Topol.io skills and plugins for AI coding agents",
-    "version": "3.0.0"
+    "version": "3.1.0"
   },
   "plugins": [
     {
