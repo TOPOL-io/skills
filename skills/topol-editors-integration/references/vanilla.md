@@ -5,7 +5,7 @@ JS/TS, Angular, Vue 2, Svelte 4, Svelte for the LPE) or when you need imperative
 control.
 
 ```bash
-npm install @topol.io/editor@<resolved 1.x version>
+npm install @topol.io/editor
 ```
 
 ESM and CJS builds are both published; types ship with the package. Both editors

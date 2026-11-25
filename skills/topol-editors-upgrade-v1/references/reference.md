@@ -6,12 +6,13 @@ Source of truth: the 1.x package READMEs on npm and the exported types (`IEmailC
 
 | Line                                                             | npm tag           | Editor runtime | API shape                                                                                   |
 | ---------------------------------------------------------------- | ----------------- | -------------- | ------------------------------------------------------------------------------------------- |
-| `0.3.0`                                                          | `latest`          | v3             | `TopolPlugin.init({ id, authorize, callbacks })`, positional callback args                  |
+| `0.3.0`                                                          | none (previous major) | v3         | `TopolPlugin.init({ id, authorize, callbacks })`, positional callback args                  |
 | `1.0.0-alpha.1`–`.9` (editor-react up to `.10`)                  | none (superseded) | v3             | same, plus `EmailEditor` alias, multilanguage methods, `LandingPageEditor`                  |
 | `1.0.0-alpha.10` (editor-react `.11`); `2.0.0-alpha.1`–`.3`      | none (superseded) | v4             | `EmailEditor.init({ config, ...callbacks })` → instance, object payloads; old names aliased |
-| `1.0.0-alpha.11`+ (editor-react `1.0.0-alpha.12`+)               | `alpha`           | v4             | same shape; `entityId`, one type naming scheme, aliases removed, Svelte 5                   |
+| `1.0.0-alpha.11` (editor-react `.12`)                            | none (superseded) | v4             | same shape; `entityId`, one type naming scheme, Svelte 5; pre-1.0 option, callback and method names still accepted |
+| `1.0.0`+ (prereleases from `1.0.0-alpha.12`, editor-react `.13`) | `latest`          | v4             | same shape; the pre-1.0 option, callback and method names are removed                       |
 
-"Before" below means the v3 API (`0.3.0` and `1.0.0-alpha.1`–`.9`). "After" means the current 1.x, from `1.0.0-alpha.11` (editor-react `1.0.0-alpha.12`).
+"Before" below means the v3 API (`0.3.0` and `1.0.0-alpha.1`–`.9`). "After" means the stable 1.x (`^1`).
 
 `TopolPlugin` (core), the core default export and `TopolEditor` (wrappers) no longer exist. The wrappers re-export the core factories as `CoreEmailEditor` / `CoreLandingPageEditor`.
 
@@ -41,9 +42,31 @@ Breaking:
 - **API blocks** (`apiBlocks`) need a `name`.
 - **Landing Page Editor** wrappers, instance and option types changed; see `landing-page-editor.md`.
 
-Deprecated, still working — rename now (table in *Config table* and *Callback table*): `authorize.userId`, `onEdittedWithoutSaveChanged`, `updateTestingEmailAddresses`, `onBlocksAndStructuresVisibilityChange`, `toggleBlocksAndStructuresVisibility()`, `toggleControlPanel()`, `hideControlPanel`, `showControlPanelExpand`, `productMergetagTags`, `dynamicMergetags`, `api.PREMADE_TEMPLATES_KEYWORDS`, and the dashed `defaultTemplateSettings` keys.
+Everything in *Coming from `1.0.0-alpha.11`* below applies too.
 
 New and optional: `save()` rejects with `err.code === "SAVE_IN_PROGRESS"` while another save runs; `close()` is typed as an alias of `destroy()`; `onEditorClose` may return a promise; `disableShortcuts`, `saveAndCloseButton`, `clickTrackingOptOut`, `startWithOpenElementsPanel`, the `"jinja"` `emailServiceProvider`; `updateApiAuthorizationHeader` removes a header given `null`.
+
+## Coming from `1.0.0-alpha.11` (editor-react `.12`)
+
+These apps are on the current shape. `1.0.0` removes the names that `alpha.11` still accepted as deprecated aliases, so each one left in the app now breaks without a warning: options and callbacks are ignored, methods throw "not a function", and `init()` rejects a config that only sets `authorize.userId`.
+
+| Removed | Use |
+| --- | --- |
+| `authorize.userId` | `authorize.entityId` |
+| `onEdittedWithoutSaveChanged({ value })` | `onUnsavedChangesChange({ hasUnsavedChanges })` |
+| `updateTestingEmailAddresses({ emails })` | `onTestingEmailsChange({ emails })` |
+| `onBlocksAndStructuresVisibilityChange({ value })` | `onHiddenElementsVisibilityChange({ visible })` |
+| `toggleBlocksAndStructuresVisibility()` | `toggleHiddenElementsVisibility()` |
+| `toggleControlPanel()` | `toggleSelectionPanel()` |
+| `hideControlPanel` | `hideSelectionPanel` |
+| `showControlPanelExpand` | `hideSelectionPanelExpand` (inverted) |
+| `productMergetagTags` | `productMergeTags` |
+| `apiBlocks.*.dynamicMergetags` | `dynamicMergeTags` |
+| `api.PREMADE_TEMPLATES_KEYWORDS` | `api.PREMADE_TEMPLATE_KEYWORDS` |
+| `defaultTemplateSettings`: `blockBackgroundColor`, `"structure-margin"`, `"line-height"`, `"stack-columns"` | `sectionBackgroundColor`, `sectionPadding`, `lineHeight`, `stackColumns` |
+| Misspelled `textOverride` keys | corrected keys; see *`textOverride` keys* |
+
+The Vue wrapper no longer emits the removed callbacks as events, and the React and Svelte wrappers no longer forward them. The Landing Page Editor lost `authorize.userId`, `onEdittedWithoutSaveChanged`, `api.PREMADE_TEMPLATES_KEYWORDS` and `defaultTemplateSettings["template-color"]` (now `templateColor`) the same way. The leftover grep at the end of this file finds all of them.
 
 ## Core before / after
 
@@ -254,8 +277,8 @@ All current methods return `Promise<void>` unless noted.
 | `getMutations()` → `void` (result via `onGetMutations`)                       | `getMutations()` → `Promise<{ code, primary }[]>` (also fires `onGetMutations`)                                      |
 | `updateOptions(partial)`                                                      | `updateOptions(partial)` — `authorize` excluded                                                                      |
 | `createLanguage / deleteLanguage / selectLanguage / setPrimaryLanguage(lang)` | same names, argument is `code`                                                                                       |
-| `toggleBlocksAndStructuresVisibility()`                                       | `toggleHiddenElementsVisibility()` (old name deprecated)                                                             |
-| `toggleControlPanel()`                                                        | `toggleSelectionPanel()` (old name deprecated)                                                                       |
+| `toggleBlocksAndStructuresVisibility()`                                       | `toggleHiddenElementsVisibility()`                                                                                   |
+| `toggleControlPanel()`                                                        | `toggleSelectionPanel()`                                                                                             |
 | `updateApiAuthorizationHeader(header)`                                        | same; an object is merged, a `null` value removes that header                                                        |
 | —                                                                             | `translateLanguage(code, sourceCode?)`, `translateAllLanguages()`                                                    |
 | `setMergeTags` (typed on `window.TopolPlugin` only)                           | `setMergeTags(tags)` on the instance                                                                                 |
@@ -292,7 +315,7 @@ Every current callback takes zero arguments or one object. Wrapper props and eve
 
 New in 1.x (v4): `onPreviewClose()`, `onImageDelete({ items })` with items `{ name, type, path, url?, key }`, `onHiddenElementsVisibilityChange({ visible })`, `onTemplateUpdated()`, the nonce authentication callback `getNonce`, and the Cloud callbacks `onCloudSave`, `onCloudTemplateChange`.
 
-Deprecated object-payload names from `1.0.0-alpha.10` that still fire next to their replacement and log a warning: `onEdittedWithoutSaveChanged({ value })`, `updateTestingEmailAddresses({ emails })`, `onBlocksAndStructuresVisibilityChange({ value })` (fires only on the reveal on device switch, always `false`). Rename them and read the new payload key.
+The object-payload names of `1.0.0-alpha.10` and `.11` are removed and never called: `onEdittedWithoutSaveChanged({ value })` → `onUnsavedChangesChange({ hasUnsavedChanges })`, `updateTestingEmailAddresses({ emails })` → `onTestingEmailsChange({ emails })`, `onBlocksAndStructuresVisibilityChange({ value })` → `onHiddenElementsVisibilityChange({ visible })`. Rename them and read the new payload key.
 
 `onEditorError` `source` is `EditorErrorSource`: `integration`, `init`, `authorize`, `nonceAuth`, `network`, `load` (was `templateLoad`), `updateTemplate`, `save`, `testSend`, `cloudTemplates`, `cloudSync`.
 
@@ -306,7 +329,7 @@ v3 wrapper-specific payload differences that also change: Vue events already car
 | -------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
 | `id`                                                                                         | removed — pass the container to `render()` / the wrapper owns it                                                       |
 | `callbacks: { ... }`                                                                         | removed — callbacks sit beside `config` in the factory props                                                           |
-| `authorize.userId: string \| number`                                                         | `authorize.entityId`: non-negative integer, or string matching `[A-Za-z0-9_-]+` (`userId` is a deprecated alias; `entityId` wins when both are set) |
+| `authorize.userId: string \| number`                                                         | `authorize.entityId`: non-negative integer, or string matching `[A-Za-z0-9_-]+` (`userId` is no longer read; `init()` rejects a config without `entityId`) |
 | `savedBlocks: ISavedBlock[] \| boolean`                                                      | `savedSections: ISavedSection[] \| boolean \| null`                                                                    |
 | `premadeBlocks`, `premadeBlocksNoOverwrite`                                                  | `premadeSections: false \| sections \| { blocks, override }`                                                           |
 | `syncedRowsEnable`                                                                           | `syncedSectionsEnabled`                                                                                                |
@@ -314,17 +337,17 @@ v3 wrapper-specific payload differences that also change: Vue events already car
 | `defaultTemplateSettings.langs[].key`                                                        | `defaultTemplateSettings.langs[].code`                                                                                 |
 | `api.SAVE`, `api.LOAD`, `api.PREVIEW`                                                        | removed — persist through `onSave`, load with `editor.load()`                                                          |
 | `api.AUTOSAVE`, `api.GET_AUTOSAVE`, `api.SYNCED_ROWS`                                        | removed — autosaves are served from `api.AUTOSAVES`                                                                    |
-| `api.TEST_EMAIL`, `api.IMAGE_EDITOR_UPLOAD`                                                  | removed — test sends arrive in `onTestSend`                                                                            |
+| `api.TEST_EMAIL`, `api.IMAGE_EDITOR_UPLOAD`                                                  | removed — test sends arrive in `onTestSend`; images saved from the Image Editor upload through `api.IMAGE_UPLOAD`      |
 | `api.SAVED_BLOCKS`                                                                           | `api.SAVED_SECTIONS`                                                                                                   |
-| `googleApiKey`, `imageEditorV2`, `lambdaStage: "v4"`                                         | removed                                                                                                                |
+| `googleApiKey`, `imageEditorV2`, `lambdaStage: "v4"`                                         | removed — the Image Editor takes its fonts from `customFonts`                                                          |
 | `contentBlocks.raw`, `contentBlocks["custom-raw"]`, `contentBlocks.apiBlock`                 | removed — the whole `contentBlocks` object is rejected when one is present; use `customBlocks[].disabled`              |
 | —                                                                                            | `api.GENERATE_TEXT`, `GENERATE_PREHEADER`, `GENERATE_TRANSLATION`, `PRODUCT_CATEGORIES`, `PREMADE_TEMPLATES`, `PREMADE_TEMPLATE_CATEGORIES`, `PREMADE_TEMPLATE_KEYWORDS` |
 | —                                                                                            | `cloud: { enabled, templateId?, features? }`                                                                           |
 | —                                                                                            | `permissions`, `enableSubjectLine`, `chatAIOnSegment`, `aiLabeledElements`, `languageMergeTag`, `enableFileManagerInGif`, `googlePromotionalAnnotation`, `ecm`, `disableShortcuts`, `saveAndCloseButton`, `clickTrackingOptOut`, `startWithOpenElementsPanel`, `countdown`, loop/rating content blocks, image-editor options |
 
-Renamed with the old name still accepted (deprecated; the new name wins when both are set):
+Renamed; the old name is removed and ignored:
 
-| Deprecated                                                  | Use                                                   |
+| Before                                                      | After                                                 |
 | ----------------------------------------------------------- | ----------------------------------------------------- |
 | `authorize.userId`                                          | `authorize.entityId`                                  |
 | `hideControlPanel`                                          | `hideSelectionPanel`                                  |
@@ -347,6 +370,15 @@ A removed or misspelled option left in the config is ignored without an error in
 | `save_as_block` | `save_as_section` |
 | `synced_rows` | `synced_sections` |
 | `*_synced_row*` | `*_synced_section*` |
+| `layout.chatAI.grammer` | `layout.chatAI.grammar` |
+| `layout.chatAI.questions.personalizate` | `layout.chatAI.questions.personalize` |
+| `forms.GPA.not_quaranted` | `forms.GPA.not_guaranteed` |
+| `forms.settings_line_heigh_precise` / `_predefined` | `forms.settings_line_height_precise` / `_predefined` |
+| `forms.settings_bgc` | `forms.settings_background_color` |
+| `forms.stuck` / `forms.do_not_stuck` | `forms.stack_columns` / `forms.do_not_stack_columns` |
+| `errors.invalid_HTML_row` | `errors.invalid_html_section` |
+| `errors.fix_HTML` | `errors.fix_html` |
+| `product.recommeneded` | `product.recommended` |
 
 The keys are plain strings, so the typecheck does not find a stale one; grep for them.
 
@@ -421,7 +453,7 @@ Runtime differences between Email Editor v3 and v4 that no rename reveals. Repor
 
 ## Nonce authentication
 
-Passing `getNonce` switches authentication from the public key alone to short-lived `nc_` nonces that the host's backend creates with the Secret key. It is standalone: there is no separate option, the presence of the callback enables it, and templates, autosaves, images, comments, and sections keep using the host's `api.*` endpoints and callbacks. It works for the Email Editor and the Landing Page Editor. Topol Cloud is built on top of it.
+Nonce authentication is the setup Topol recommends for every integration; the API key alone keeps working, so the upgrade does not depend on it. Passing `getNonce` switches authentication from the public key alone to short-lived `nc_` nonces that the host's backend creates with the Secret key. It is standalone: there is no separate option, the presence of the callback enables it, and templates, autosaves, images, comments, and sections keep using the host's `api.*` endpoints and callbacks. It works for the Email Editor and the Landing Page Editor. Topol Cloud is built on top of it.
 
 ```ts
 const editor = await EmailEditor.init({
@@ -439,7 +471,7 @@ const editor = await EmailEditor.init({
 Rules:
 
 - `getNonce` is a top-level callback in core, a prop in React and Svelte, and a `callbacks` member in Vue (never an event). Its type is `INonceAuthCallbacks["getNonce"]`.
-- The nonce endpoint is the host's responsibility: authenticate the session, derive the user, bind the nonce to the same `entityId` as `authorize.entityId`, expire it within an hour. The backend either signs the nonce itself (HMAC-SHA256 with the Secret key) or asks Topol's `POST /auth/nonce` for one; the signing code and request format are in <https://docs.topol.io/email-editor/guide/nonce-authentication.html> and <https://docs.topol.io/landing-page-editor/guide/nonce-authentication.html>. Scaffold the endpoint as a marked TODO unless the user asks for it.
+- The nonce endpoint lives on the host's backend: it answers only signed-in users, binds the nonce to the same `entityId` as `authorize.entityId` (taken from the session, not from the request) and expires it within an hour. The backend signs the nonce itself with the Secret key, with no call to Topol: `nc_<base64url(payload)>.<base64url(HMAC-SHA256(base64url(payload), key))>`, where the payload is the JSON `{ credPk, entityId, exp }` (`credPk`: the value of `authorize.apiKey`; `entityId`: the value of `authorize.entityId` as a string; `exp`: expiry in whole Unix seconds, one hour at most), `key` is the SHA-256 hex digest of the Secret key (put `sk_` in front of a Secret key that lacks the prefix before hashing), and base64url is URL-safe Base64 without padding. Node.js and PHP signing code: <https://docs.topol.io/email-editor/guide/nonce-authentication.html>, <https://docs.topol.io/landing-page-editor/guide/nonce-authentication.html>. Use the app's existing session handling for the endpoint; when you cannot find it, ask instead of inventing one. The Secret key stays in a server-only env var; never sign nonces in the browser.
 - The editor refreshes the nonce before it expires and retries once on a rejected nonce. A first nonce that cannot be obtained reports `onEditorError` with `source: "authorize"`; a later refresh failure reports `source: "nonceAuth"` while the editor keeps working on the last valid nonce.
 
 ## Topol Cloud
@@ -477,16 +509,16 @@ Expected false positives to read and dismiss: `callbacks: {` on a line that buil
 Stale `textOverride` keys (apps coming from the v3 API):
 
 ```sh
-grep -rnE "saved_blocks|premade_blocks|save_as_block|synced_row" . \
+grep -rnE "saved_blocks|premade_blocks|save_as_block|synced_row|grammer|personalizate|not_quaranted|line_heigh_|settings_bgc|forms\.stuck|do_not_stuck|invalid_HTML_row|fix_HTML|recommeneded" . \
   --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=.git
 ```
 
-Deprecated names — still working, but the upgrade should leave none behind:
+Names removed in 1.0 (accepted as deprecated aliases up to `1.0.0-alpha.11`). They fail without a warning, so none may remain:
 
 ```sh
-grep -rnE "onEdittedWithoutSaveChanged|updateTestingEmailAddresses|onBlocksAndStructuresVisibilityChange|toggleBlocksAndStructuresVisibility|toggleControlPanel|hideControlPanel|showControlPanelExpand|productMergetagTags|dynamicMergetags|PREMADE_TEMPLATES_KEYWORDS|blockBackgroundColor|structure-margin|line-height|stack-columns|userId" . \
+grep -rnE "onEdittedWithoutSaveChanged|updateTestingEmailAddresses|onBlocksAndStructuresVisibilityChange|toggleBlocksAndStructuresVisibility|toggleControlPanel|hideControlPanel|showControlPanelExpand|productMergetagTags|dynamicMergetags|PREMADE_TEMPLATES_KEYWORDS|blockBackgroundColor|structure-margin|line-height|stack-columns|template-color|userId" . \
   --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=.git \
   --exclude=package-lock.json --exclude=yarn.lock --exclude=pnpm-lock.yaml
 ```
 
-Only hits inside a Topol config or handler count: `userId` matters in an `authorize` object (and in the backend's nonce payload), `line-height` and friends in `defaultTemplateSettings`.
+Only hits inside a Topol config or handler count: `userId` matters in an `authorize` object (and in the backend's nonce payload), `line-height` and friends as top-level keys of `defaultTemplateSettings` (`"line-height"` inside its block-level defaults such as `text` or `button` is an MJML attribute and stays).

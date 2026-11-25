@@ -81,7 +81,7 @@ Source of truth: the v4 loader (`apps/email-editor/zoid/init.js`), `apps/email-e
 | Options at the top level | Options under `config` (required; missing `config` throws `Expected prop "config" to be defined`) |
 | `callbacks: { … }` inside the options | Callbacks as top-level props next to `config`; ones left in `config` are stripped |
 | Loader may be included twice (v3 skipped re-creation) | Loader once per page; a second copy throws `Can not register multiple components with the same tag` |
-| `authorize.userId`: any string or number | `authorize.entityId`: non-negative integer, or string matching `[A-Za-z0-9_-]+`; otherwise init fails. `userId` is a deprecated alias; `entityId` wins when both are set |
+| `authorize.userId`: any string or number | `authorize.entityId`: non-negative integer, or string matching `[A-Za-z0-9_-]+`; otherwise init fails. `userId` is no longer read |
 
 Method calls made before the editor is ready are queued and resolve after initialization. If authentication or init fails, the host gets `onEditorError({ source: "authorize" })` and then `onEditorError({ source: "init" })`; queued calls never settle. Recover with `editor.destroy()` and a new `TopolEmailEditor(...)`.
 
@@ -94,8 +94,8 @@ All methods return Promises.
 | `TopolPlugin.load(json)` | `editor.load(json)`; resolves once applied, resets the unsaved flag |
 | `TopolPlugin.save()` / `save(lang)` | `editor.save()` / `save({ langCode })`; a bare string is ignored; rejects with an Error whose `code` is `"SAVE_IN_PROGRESS"` while another save runs; other failures resolve and report `onEditorError({ source: "save" })` |
 | `TopolPlugin.destroy()` | `editor.destroy()`; `close()` is an alias |
-| `TopolPlugin.toggleBlocksAndStructuresVisibility()` | `editor.toggleHiddenElementsVisibility()` (old name deprecated) |
-| `TopolPlugin.toggleControlPanel()` | `editor.toggleSelectionPanel()` (old name deprecated) |
+| `TopolPlugin.toggleBlocksAndStructuresVisibility()` | `editor.toggleHiddenElementsVisibility()` |
+| `TopolPlugin.toggleControlPanel()` | `editor.toggleSelectionPanel()` |
 | `TopolPlugin.setSavedBlocks(list)` | `editor.setSavedSections(list)` |
 | `TopolPlugin.getMutations()` → result via `onGetMutations` | `editor.getMutations()` → `Promise<{ code, primary }[]>`, still fires `onGetMutations` |
 | `createLanguage / deleteLanguage / selectLanguage / setPrimaryLanguage(lang)` | Same names; argument is the language code |
@@ -132,7 +132,7 @@ Unchanged names: `togglePreview`, `togglePreviewSize`, `toggleDarkMode`, `choose
 
 `mutations` items change from `{ lang, primary }` to `{ code, primary }`.
 
-Deprecated names that still fire next to their replacement and log a warning: `onEdittedWithoutSaveChanged({ value })`, `updateTestingEmailAddresses({ emails })`, `onBlocksAndStructuresVisibilityChange({ value })` (fires only on the reveal on device switch, always `false`). Rename them and read the new payload key.
+`onEdittedWithoutSaveChanged`, `updateTestingEmailAddresses` and `onBlocksAndStructuresVisibilityChange` are not called under their v3 names in any form; early v4 builds kept them as deprecated aliases, the release does not.
 
 `onEditorError` sources include `authorize`, `init`, `save`, and `nonceAuth` (with `getNonce`).
 
@@ -149,11 +149,13 @@ Deprecated names that still fire next to their replacement and log a warning: `o
 | `defaultTemplateSettings.langs[].key` | `defaultTemplateSettings.langs[].code` (template JSON itself keeps `langs[].key`) |
 | `api.AUTOSAVE`, `api.GET_AUTOSAVE` | Removed; `api.AUTOSAVES` handles list, create and read |
 | `api.SAVE`, `api.LOAD` | Removed; persist in `onSave`, load with `editor.load()` |
+| `api.IMAGE_EDITOR_UPLOAD` | Removed; images saved from the Image Editor upload through `api.IMAGE_UPLOAD` |
+| `googleApiKey` | Removed; the Image Editor takes its fonts from `customFonts` |
 | `id`, `callbacks` | Removed (see Initialization) |
 
-Renamed with the old name still accepted (deprecated, removed in the next major; the new name wins when both are set):
+Renamed; the v3 name is ignored:
 
-| Deprecated | Use |
+| v3 | v4 |
 | --- | --- |
 | `authorize.userId` | `authorize.entityId` |
 | `hideControlPanel` | `hideSelectionPanel` |
@@ -176,6 +178,15 @@ Unknown option keys are stripped without error.
 | `save_as_block` | `save_as_section` |
 | `synced_rows` | `synced_sections` |
 | `*_synced_row*` | `*_synced_section*` |
+| `layout.chatAI.grammer` | `layout.chatAI.grammar` |
+| `layout.chatAI.questions.personalizate` | `layout.chatAI.questions.personalize` |
+| `forms.GPA.not_quaranted` | `forms.GPA.not_guaranteed` |
+| `forms.settings_line_heigh_precise` / `_predefined` | `forms.settings_line_height_precise` / `_predefined` |
+| `forms.settings_bgc` | `forms.settings_background_color` |
+| `forms.stuck` / `forms.do_not_stuck` | `forms.stack_columns` / `forms.do_not_stack_columns` |
+| `errors.invalid_HTML_row` | `errors.invalid_html_section` |
+| `errors.fix_HTML` | `errors.fix_html` |
+| `product.recommeneded` | `product.recommended` |
 
 ### Changed defaults
 
@@ -216,9 +227,24 @@ Autosave params and bodies (`key`, `hostname`, `templateId`, `uuid`, `definition
 - **Window-bar close without `onEditorClose`.** v4 closes the editor itself; v3 needed the callback. If `onEditorClose` rejects, the editor also closes itself.
 - **Hostname for authorization.** Taken from the parent page through the iframe bridge, so a strict `Referrer-Policy` no longer breaks authorization.
 
-## Optional v4 features (only when asked)
+## Nonce authentication and other v4 features
 
-- `getNonce()`: nonce authentication with short-lived `nc_` tokens minted by the host backend from the Secret key via Topol `POST /auth/nonce`.
+Nonce authentication is the setup Topol recommends for every integration. The upgrade works without it, because `authorize.apiKey` keeps authorizing the editor on its own: add it when the user asks, otherwise recommend it in the report.
+
+- `getNonce()`: a top-level callback next to `config` that resolves to an `nc_…` string fetched from the host's backend. Its presence turns nonce authentication on; there is no separate option.
+
+  ```js
+  async getNonce() {
+    const response = await fetch("/api/topol/nonce", { method: "POST" });
+    if (!response.ok) throw new Error("Could not get a Topol nonce");
+    return (await response.json()).nonce;
+  },
+  ```
+
+  The backend endpoint answers only signed-in users and signs the nonce itself with the Secret key, with no call to Topol: `nc_<base64url(payload)>.<base64url(HMAC-SHA256(base64url(payload), key))>`, where the payload is the JSON `{ credPk, entityId, exp }` (`credPk`: the value of `authorize.apiKey`; `entityId`: the value of `authorize.entityId` as a string; `exp`: expiry in whole Unix seconds, one hour at most), `key` is the SHA-256 hex digest of the Secret key (put `sk_` in front of a Secret key that lacks the prefix before hashing), and base64url is URL-safe Base64 without padding. Node.js and PHP signing code: <https://docs.topol.io/email-editor/guide/nonce-authentication.html>. Never send the Secret key to the browser or sign nonces there. A first nonce that cannot be obtained reports `onEditorError({ source: "authorize" })`; a failed refresh reports `source: "nonceAuth"`.
+
+Only when asked:
+
 - `cloud: { enabled, templateId?, features? }`: Topol Cloud storage; requires `getNonce`.
 - `countdown` options and `api.COUNTDOWN_PRESETS`: Countdown block add-on.
 - `disableShortcuts`, `linkTracking: { provider: "sparkpost" }`, `saveAndCloseButton: "dropdown" | "separate"`, `startWithOpenElementsPanel`.
@@ -230,13 +256,13 @@ grep -rnE "v3\.email-assets\.topol\.io|TopolPlugin|\bid: *['\"]#|callbacks: *\{|
   --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=.git --exclude-dir=vendor
 ```
 
-Deprecated names, still working, but the upgrade should leave none behind:
+More v3 names that v4 ignores without a warning (methods throw). None may remain:
 
 ```sh
-grep -rnE "onEdittedWithoutSaveChanged|updateTestingEmailAddresses|onBlocksAndStructuresVisibilityChange|toggleBlocksAndStructuresVisibility|toggleControlPanel|hideControlPanel|showControlPanelExpand|productMergetagTags|dynamicMergetags|PREMADE_TEMPLATES_KEYWORDS|blockBackgroundColor|structure-margin|line-height|stack-columns|userId" . \
+grep -rnE "onEdittedWithoutSaveChanged|updateTestingEmailAddresses|onBlocksAndStructuresVisibilityChange|toggleBlocksAndStructuresVisibility|toggleControlPanel|hideControlPanel|showControlPanelExpand|productMergetagTags|dynamicMergetags|PREMADE_TEMPLATES_KEYWORDS|blockBackgroundColor|structure-margin|line-height|stack-columns|userId|grammer|personalizate|not_quaranted|line_heigh_|settings_bgc|forms\.stuck|do_not_stuck|invalid_HTML_row|fix_HTML|recommeneded" . \
   --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=.git --exclude-dir=vendor
 ```
 
-Only hits inside a Topol config or handler count: `userId` matters in an `authorize` object, `line-height` and friends in `defaultTemplateSettings`.
+Only hits inside a Topol config or handler count: `userId` matters in an `authorize` object, `line-height` and friends as top-level keys of `defaultTemplateSettings` (`"line-height"` inside its block-level defaults such as `text` or `button` is an MJML attribute and stays).
 
 Hits for `onError` / `onClose` that belong to other libraries are fine; only the ones passed to the Topol editor must go.

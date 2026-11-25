@@ -33,18 +33,18 @@ Email Editor can also be embedded with a plain `<script>` tag. Names of the npm 
 
 | Skill | Purpose | npm `@topol.io/editor*` | Email Editor | Landing Page Editor |
 | --- | --- | --- | --- | --- |
-| [`topol-editors-integration`](skills/topol-editors-integration/SKILL.md) | First-time integration: picks the package for the framework, wires options, callbacks and the API key | 1.x (`1.0.0-alpha.11`+) | v4 | v1 |
-| [`topol-editors-upgrade-v1`](skills/topol-editors-upgrade-v1/SKILL.md) | Upgrade 0.x or an earlier 1.x alpha → 1.x: instance API, object callback payloads, section and `entityId` renames, removed aliases and renamed types, Svelte 5 callback props, v4 loader, optional nonce authentication and Topol Cloud | 0.x / earlier 1.x alpha → 1.x | v3 → v4 | v1 (new for 0.x) |
+| [`topol-editors-integration`](skills/topol-editors-integration/SKILL.md) | First-time integration: picks the package for the framework, wires options, callbacks and the API key | 1.x (`^1`) | v4 | v1 |
+| [`topol-editors-upgrade-v1`](skills/topol-editors-upgrade-v1/SKILL.md) | Upgrade 0.x or a `1.0.0` prerelease → 1.x: instance API, object callback payloads, section and `entityId` renames, removed aliases and renamed types, Svelte 5 callback props, v4 loader, optional nonce authentication and Topol Cloud | 0.x / 1.0.0 prerelease → 1.x | v3 → v4 | v1 (new for 0.x) |
 | [`topol-editors-upgrade-email-v4`](skills/topol-editors-upgrade-email-v4/SKILL.md) | Upgrade a script-tag integration (no npm): v4 loader and `TopolEmailEditor` instance, object callback payloads, renamed options and callbacks, changed defaults, autosave endpoints and CORS | — (script tag) | v3 → v4 | not affected |
 
 The npm skills cover the core package and the React, Vue and Svelte wrappers. Every skill
 runs the project's own checks and reports the decisions only a human can make.
 
-> **Prereleases.** 1.x is on the `alpha` dist-tag; `latest` is still 0.3.0 (Email Editor v3 API).
-> The skills target `1.0.0-alpha.11` and later (`@topol.io/editor-react` `1.0.0-alpha.12`). Earlier
-> 1.x alphas differ: up to `.9` they use the v3 API, and `.10` has the v4 API under older names; the
-> upgrade skill covers both. `@topol.io/editor-svelte` 1.x needs Svelte 5. The skills pin the exact
-> version; they never trust `latest` or `^`.
+> **Versions.** 1.x is the stable line and the `latest` dist-tag; the skills install `^1`. `0.3.0`
+> (Email Editor v3 API) is the previous major. The `1.0.0` prereleases differ from the release: up
+> to `alpha.9` they use the v3 API, `alpha.10` has the v4 API under older names, and `alpha.11`
+> still accepts names that `1.0.0` removes; the upgrade skill covers all three.
+> `@topol.io/editor-svelte` 1.x needs Svelte 5.
 
 ## Install
 

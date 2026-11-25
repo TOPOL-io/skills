@@ -4,7 +4,7 @@ Peer dep: `vue` `^3.2.25`. Ships both editors as components. Vue 2 apps must use
 the core package (`vanilla.md`).
 
 ```bash
-npm install @topol.io/editor-vue@<resolved 1.x version>
+npm install @topol.io/editor-vue
 ```
 
 ## Email Editor

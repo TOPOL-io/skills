@@ -1,6 +1,6 @@
 # Landing Page Editor in 1.x
 
-The Landing Page Editor arrived during the 1.x alphas and changed along the way.
+The Landing Page Editor arrived during the `1.0.0` prereleases and changed along the way.
 Which part of this file applies depends on where the app starts:
 
 - **Coming from 0.3.0:** the Landing Page Editor is **new functionality**, not
@@ -12,6 +12,9 @@ Which part of this file applies depends on where the app starts:
 - **Landing Page Editor code written against any alpha up to `1.0.0-alpha.10`**
   (editor-react `.11`): the wrappers, the instance and the option types changed;
   see *Changes since `1.0.0-alpha.10`*.
+- **Landing Page Editor code written against `1.0.0-alpha.11`** (editor-react
+  `.12`): only the removed names at the end of *Changes since `1.0.0-alpha.10`*
+  apply.
 
 `init()` resolves to an **instance** that you then render and control, the same
 model as the 1.x Email Editor.
@@ -55,7 +58,7 @@ Every callback takes no arguments or one object:
 | `onUndoChange` / `onRedoChange` | `(count)` | `({ count })` |
 | `onPreview` | `(html)` | `({ html })` |
 | `onAlert` | `(notification)` | `({ notification })` |
-| `onEdittedWithoutSaveChanged` | `(value)` | **`onUnsavedChangesChange({ hasUnsavedChanges })`**; the old name still fires with `({ value })` but is deprecated |
+| `onEdittedWithoutSaveChanged` | `(value)` | **`onUnsavedChangesChange({ hasUnsavedChanges })`**; the old name is removed and never called |
 | `onOpenCustomBlockDialog` | `(block)` | `({ block })` |
 | `onTemplateRename` | `(name)` | `({ name })` |
 | `onClose` | `()` | **`onEditorClose()`**, may return a Promise |
@@ -102,8 +105,9 @@ Breaking:
   instead of `…/topol-lpe.js`. A Content Security Policy that lists the script by
   full path needs the new one.
 
-Deprecated, still working — rename now: `authorize.userId` → `entityId`,
-`onEdittedWithoutSaveChanged` → `onUnsavedChangesChange`,
+Removed in `1.0.0` (still accepted as deprecated aliases in `1.0.0-alpha.11`,
+now ignored without a warning): `authorize.userId` → `entityId`,
+`onEdittedWithoutSaveChanged` → `onUnsavedChangesChange({ hasUnsavedChanges })`,
 `defaultTemplateSettings["template-color"]` → `templateColor`,
 `api.PREMADE_TEMPLATES_KEYWORDS` → `api.PREMADE_TEMPLATE_KEYWORDS`.
 
