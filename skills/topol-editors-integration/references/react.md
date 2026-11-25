@@ -3,7 +3,7 @@
 Peer deps: `react` / `react-dom` `^18 || ^19`. Ships both editors as components.
 
 ```bash
-npm install @topol.io/editor-react@<resolved 1.x version>
+npm install @topol.io/editor-react
 ```
 
 ## Email Editor

@@ -17,8 +17,8 @@ authorize: {
 `entityId` decides where that account's images are stored and counts as one
 billed user. For the Email Editor it must be a non-negative integer or a
 string matching `[A-Za-z0-9_-]+`; anything else makes `init()` reject. Map emails
-or other ids to a URL-safe value (for example a hash). `userId` is a deprecated
-alias of `entityId`; do not use it in new code. The type is `IAuthorize`.
+or other ids to a URL-safe value (for example a hash). The pre-1.0 `userId` key is
+removed and no longer read. The type is `IAuthorize`.
 
 Neither editor takes a container id in its config. The core `init()` resolves to
 an instance and you call `instance.render(selectorOrElement)`; the framework
@@ -93,7 +93,7 @@ onBannerClick({ json, html })
 onLanguageCreated({ code, mutations }) / onLanguageDeleted({ code, mutations })
 onPrimaryLanguageChanged({ code, mutations }) / onLanguageSelected({ code })
 onGetMutations({ mutations })                              // mutations: { code, primary }[]
-getNonce(): Promise<string>                                // optional; enables nonce authentication
+getNonce(): Promise<string>                                // recommended; enables nonce authentication
 onCloudSave({ templateId, name?, langCode? }) / onCloudTemplateChange({ type, templateId, name?, folderId? })
 ```
 
@@ -117,10 +117,10 @@ editor — always use `onEditorClose` / `onEditorError`.
 `onLoaded` fires after every `load()`. Load the first template from `onInit` (or
 after `render()`), never from `onLoaded`, or it loops.
 
-Deprecated, still fired but logged as a warning — do not use in new code:
-`onEdittedWithoutSaveChanged({ value })` → `onUnsavedChangesChange`,
-`updateTestingEmailAddresses({ emails })` → `onTestingEmailsChange`,
-`onBlocksAndStructuresVisibilityChange({ value })` → `onHiddenElementsVisibilityChange`.
+Removed in 1.0 and never called — older examples still show them:
+`onEdittedWithoutSaveChanged` → `onUnsavedChangesChange({ hasUnsavedChanges })`,
+`updateTestingEmailAddresses` → `onTestingEmailsChange({ emails })`,
+`onBlocksAndStructuresVisibilityChange` → `onHiddenElementsVisibilityChange({ visible })`.
 
 ## Instance methods (Email Editor)
 
@@ -156,7 +156,7 @@ await editor.destroy();             // close() is an alias
 
 Only one save runs at a time: `save()` rejects with an error whose `code` is
 `"SAVE_IN_PROGRESS"` while another save is running. Check `err.code`, not the
-class. Deprecated aliases: `toggleControlPanel()` → `toggleSelectionPanel()`,
+class. Removed in 1.0 (calling them throws): `toggleControlPanel()` → `toggleSelectionPanel()`,
 `toggleBlocksAndStructuresVisibility()` → `toggleHiddenElementsVisibility()`.
 
 The wrappers expose the instance: React `ref.current?.getEditor()` or the
@@ -205,7 +205,8 @@ take the same as `stage` / `loaderUrl` props. Leave both unset in production cod
 
 ## Nonce authentication and Topol Cloud
 
-Optional, and the most secure way to run either editor. Passing a `getNonce`
+Nonce authentication is the recommended setup for either editor; add it by
+default (step 7 of the skill says when not to). Passing a `getNonce`
 callback switches the editor from the public API key alone to short-lived `nc_`
 nonces created on the app's backend with the Secret key. There is no separate
 option: the presence of the callback enables it, and the `api.*` endpoints and
@@ -223,10 +224,36 @@ async getNonce() {
 - Where it goes: core — next to the other callbacks; React and Svelte — the
   `getNonce` prop; Vue — a member of the `callbacks` prop (never an event). It
   works on `EmailEditor` and `LandingPageEditor`. Type: `INonceAuthCallbacks['getNonce']`.
-- The backend endpoint is the app's job: answer only signed-in users, bind the
-  nonce to the same `entityId` as `authorize.entityId`, expire it within an hour,
-  and keep the Secret key (`sk_`) on the server. The signing code and the
-  alternative Topol minting endpoint are in the guides:
+- The backend endpoint answers only signed-in users, binds the nonce to the
+  same `entityId` as `authorize.entityId` (taken from the session, not from the
+  request), expires it within an hour, and keeps the Secret key (`sk_`) on the
+  server. It signs the nonce itself, with no call to Topol:
+
+  ```ts
+  import { createHash, createHmac } from 'node:crypto';
+
+  // nc_<base64url(payload)>.<base64url(HMAC-SHA256(base64url(payload), key))>
+  export function signTopolNonce(entityId: string | number): string {
+    const raw = process.env.TOPOL_SECRET_KEY!;                 // server-only
+    const secret = raw.startsWith('sk_') ? raw : `sk_${raw}`;  // keys issued before the prefix
+    const key = createHash('sha256').update(secret).digest('hex');
+    const payload = {
+      credPk: process.env.TOPOL_API_KEY!,        // the same value as authorize.apiKey
+      entityId: String(entityId),                // the same value as authorize.entityId
+      exp: Math.floor(Date.now() / 1000) + 3600, // whole Unix seconds, one hour at most
+    };
+    const body = Buffer.from(JSON.stringify(payload)).toString('base64url');
+    const signature = createHmac('sha256', key).update(body).digest('base64url');
+    return `nc_${body}.${signature}`;
+  }
+  ```
+
+  Expose it as `POST /api/topol/nonce` (or the app's own convention) returning
+  `{ nonce }`, behind the app's existing session check. The public key is
+  usually already in a browser-exposed variable; the server reads the same value.
+  For another backend language, port this function: HMAC-SHA256 keyed with the
+  SHA-256 hex digest of the Secret key, URL-safe Base64 without padding. PHP code
+  and the full format are in the guides:
   <https://docs.topol.io/email-editor/guide/nonce-authentication.html>,
   <https://docs.topol.io/landing-page-editor/guide/nonce-authentication.html>.
 - A first nonce that cannot be obtained reports `onEditorError` with
@@ -235,8 +262,8 @@ async getNonce() {
 - `cloud: { enabled: true }` (Email Editor) moves storage into Topol Cloud and
   requires `getNonce`; `init` rejects without it.
 
-Only add these when the user asks; scaffold the backend endpoint as a clearly
-marked TODO rather than inventing the app's session handling.
+Add Topol Cloud only when the user asks. For the nonce endpoint, use the app's
+existing session handling; when you cannot find it, ask instead of inventing one.
 
 ## TypeScript
 
@@ -280,11 +307,11 @@ Template JSON is typed `unknown`; there is no exported template type.
 | `Editor v4 requires { config: { authorize, ... } }` | v3-style options (`id`, nested `callbacks`) or an old example — use `{ config, ...callbacks }` |
 | `authorize.entityId must be a URL-safe string…` | `entityId` contains `@`, `.`, spaces, … — map it to a URL-safe value |
 | Handler never fires | Named `onError` / `onClose` / `onBlock*` — use the current names |
-| `has no exported member` `TopolPlugin` / `TopolEditor` / `ITopolOptions` / `ISaveData` / `ISvelteOptions`, or no default export | Names from 0.x or an earlier alpha — use the ones in the TypeScript section |
+| `has no exported member` `TopolPlugin` / `TopolEditor` / `ITopolOptions` / `ISaveData` / `ISvelteOptions`, or no default export | Names from 0.x or a 1.0.0 prerelease — use the ones in the TypeScript section |
 | Svelte: `on:onSave` / `callbacks` do nothing, or the package fails to load | The Svelte wrapper needs Svelte 5 and takes callbacks as props (see `svelte.md`) |
 | Editor loads then errors on save | `api` endpoints/auth header, not the editor — check `onEditorError`'s `detail` |
 | `save()` rejects with `code: "SAVE_IN_PROGRESS"` | A save is already running (e.g. Ctrl/Cmd+S plus your own button) — wait for it or set `disableShortcuts` |
 | `Cannot initialize from a host-provided loader` | A `<script src=…loader/build.js>` was added by hand — remove it |
 | `supports one loader URL per page` | Two different `stage` / `loaderUrl` values on one page — use one, or reload |
-| Installed the old API by accident | `latest` is 0.3.0; pin the 1.x prerelease, `1.0.0-alpha.11`+ (editor-react `.12`+) |
+| Installed the old API by accident | The lockfile or a registry mirror resolved `0.3.0` or a `1.0.0-alpha.*` build — install `@^1` and check `npm ls @topol.io/editor` |
 | Two editors / duplicate iframes | Two mounts of the component, or a manual `init()` alongside a wrapper |

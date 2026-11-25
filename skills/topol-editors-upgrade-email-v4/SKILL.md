@@ -47,13 +47,13 @@ Follow the before/after in `references/reference.md`:
 - Replace `TopolPlugin.init(TOPOL_OPTIONS)` with `const editor = TopolEmailEditor({ config, ...callbacks }); editor.render("#app");`. The container must exist and have an explicit width and height.
 - Keep the instance where every later method call can reach it (module variable, component state, `window` property the app already uses).
 
-Rename `authorize.userId` to `authorize.entityId` (`userId` still works but is deprecated and goes away in the next major). The value must be a non-negative integer or match `[A-Za-z0-9_-]+`. If the app passes emails or other IDs, flag it (see "Cannot be automated").
+Rename `authorize.userId` to `authorize.entityId`; v4 no longer reads `userId`, and init fails without `entityId`. The value must be a non-negative integer or match `[A-Za-z0-9_-]+`. If the app passes emails or other IDs, flag it (see "Cannot be automated").
 
 Done when no `TopolPlugin.init`, `id:` option, nested `callbacks:` key or `authorize.userId` remains.
 
 ### 4. Move method calls onto the instance
 
-Replace every `TopolPlugin.x()` / `window.TopolPlugin.x()` with `editor.x()`. Renames: `setSavedBlocks` → `setSavedSections`, `save('en')` → `save({ langCode: 'en' })`, `toggleBlocksAndStructuresVisibility` → `toggleHiddenElementsVisibility`, `toggleControlPanel` → `toggleSelectionPanel`. `destroy()` keeps its name (`close()` is an alias). `getMutations()` now resolves to `{ code, primary }[]` (it still fires `onGetMutations`). All methods return promises; `await editor.save()` where the page must observe completion.
+Replace every `TopolPlugin.x()` / `window.TopolPlugin.x()` with `editor.x()`. Renames: `setSavedBlocks` → `setSavedSections`, `save('en')` → `save({ langCode: 'en' })`, `toggleBlocksAndStructuresVisibility` → `toggleHiddenElementsVisibility`, `toggleControlPanel` → `toggleSelectionPanel`. A method called under its v3 name throws "not a function". `destroy()` keeps its name (`close()` is an alias). `getMutations()` now resolves to `{ code, primary }[]` (it still fires `onGetMutations`). All methods return promises; `await editor.save()` where the page must observe completion.
 
 Done when `TopolPlugin` no longer appears anywhere.
 
@@ -61,17 +61,17 @@ Done when `TopolPlugin` no longer appears anywhere.
 
 Rewrite each handler to take `()` or `({ ... })`, applying the callback table in `references/reference.md`. Renames: `onClose` → `onEditorClose`, `onError(type, message, responseBody)` → `onEditorError({ source, message, detail })`, `onBlockSave/Remove/Edit` → `onSavedSectionSave({ section })` / `onSavedSectionRemove({ id })` / `onSavedSectionEdit({ id })`, `onEdittedWithoutSaveChanged(bool)` → `onUnsavedChangesChange({ hasUnsavedChanges })`, `updateTestingEmailAddresses(emails)` → `onTestingEmailsChange({ emails })`, `onBlocksAndStructuresVisibilityChange(bool)` → `onHiddenElementsVisibilityChange({ visible })`. Language payloads use `code`, not `lang`.
 
-A callback under a removed v3 name is never called. The last three old names above still fire with an object payload and log a deprecation warning; rename them anyway. `onClose` and `onError` are worse: they are the iframe library's own lifecycle props in v4 and fire on its events, so a leftover handler runs at the wrong time. `onSave` that persists to a backend should return its promise so the editor's saving indicator waits for it.
+A callback under a v3 name is never called, and nothing warns. `onClose` and `onError` are worse: they are the iframe library's own lifecycle props in v4 and fire on its events, so a leftover handler runs at the wrong time. `onSave` that persists to a backend should return its promise so the editor's saving indicator waits for it.
 
-Done when every handler matches a v4 signature and none is named `onClose`, `onError`, `onBlock*`, or one of the deprecated names.
+Done when every handler matches a v4 signature and none is named `onClose`, `onError`, `onBlock*`, or another v3 name from the table.
 
 ### 6. Rename options
 
-Apply the options table in `references/reference.md`: `savedBlocks` → `savedSections`, `premadeBlocks` → `premadeSections` (drop `premadeBlocksNoOverwrite`), `topBarOptions` → `hideTopbarControls` (invert the list), `defaultTemplateSettings.langs[].key` → `code`, `hideControlPanel` → `hideSelectionPanel`, `showControlPanelExpand` → `hideSelectionPanelExpand` (inverted), the other deprecated names in the table, renamed `textOverride` keys, and remove `api.AUTOSAVE`, `api.GET_AUTOSAVE`, `api.SAVE`, `api.LOAD`. Unknown options are ignored silently, so a missed rename produces no error.
+Apply the options table in `references/reference.md`: `savedBlocks` → `savedSections`, `premadeBlocks` → `premadeSections` (drop `premadeBlocksNoOverwrite`), `topBarOptions` → `hideTopbarControls` (invert the list), `defaultTemplateSettings.langs[].key` → `code`, `hideControlPanel` → `hideSelectionPanel`, `showControlPanelExpand` → `hideSelectionPanelExpand` (inverted), `productMergetagTags` → `productMergeTags`, `dynamicMergetags` → `dynamicMergeTags`, `api.PREMADE_TEMPLATES_KEYWORDS` → `api.PREMADE_TEMPLATE_KEYWORDS`, the four `defaultTemplateSettings` keys, renamed and corrected `textOverride` keys, and remove `api.AUTOSAVE`, `api.GET_AUTOSAVE`, `api.SAVE`, `api.LOAD`, `api.IMAGE_EDITOR_UPLOAD` and `googleApiKey`. Unknown options are ignored silently, so a missed rename produces no error.
 
 Then check the changed defaults (`smartMergeTags.enabled`, `mobileFirstEnabled` and `premadeTemplates` are now `true`, and the selection-panel expand button is now shown). Ask the user whether to keep the new defaults or pin the v3 values; do not decide for them.
 
-Done when no v3-only or deprecated option name remains and the defaults decision is recorded.
+Done when no v3-only option name remains and the defaults decision is recorded.
 
 ### 7. Update the backend and security policy (only when present)
 
@@ -91,7 +91,7 @@ Done when no backend route, CORS list or CSP still names the v3 host or the `AUT
 1. The leftover grep in `references/reference.md` returns nothing.
 2. The app builds and its own tests pass.
 3. Open the page: `onInit` fires, an existing template loads, editing then saving reaches `onSave` with `{ json, html }`, an autosave is created and listed, closing the editor works.
-4. Report every changed file and the behaviour changes the host must know (see `references/reference.md` → Behaviour changes).
+4. Report every changed file and the behaviour changes the host must know (see `references/reference.md` → Behaviour changes). If the page has no `getNonce`, recommend nonce authentication as the next step (see `references/reference.md` → Nonce authentication and other v4 features).
 
 ## Cannot be automated — always flag these
 

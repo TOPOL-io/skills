@@ -8,7 +8,7 @@ A Svelte 4 app cannot load this package. Drive the core `@topol.io/editor` from
 `onMount` instead (`vanilla.md`), or upgrade Svelte first; ask the user which.
 
 ```bash
-npm install @topol.io/editor-svelte@<resolved 1.x version>
+npm install @topol.io/editor-svelte
 ```
 
 ## Email Editor

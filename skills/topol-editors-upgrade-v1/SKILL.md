@@ -1,22 +1,25 @@
 ---
 name: topol-editors-upgrade-v1
-description: 'Upgrade a host app from `@topol.io/editor*` 0.x or any earlier 1.x alpha to the current 1.x (`1.0.0-alpha.11`+, Email Editor v4 API). Covers `@topol.io/editor`, `-react`, `-vue`, `-svelte` and the Landing Page Editor wrappers. Use when asked to upgrade, migrate, or bump Topol editor packages to 1.x / v1 or Email Editor v4, to port `TopolPlugin` / `TopolEditor` code to the `EmailEditor` instance API, when an install throws "Editor v4 requires { config: ... }", callbacks stop firing, Svelte `on:` events stop working, or "no default export" / "has no exported member" errors for `TopolPlugin`, `TopolEditor`, `ITopolOptions`, `ISaveData` or `ISvelteOptions` appear after a Topol bump, to rename `authorize.userId` to `entityId`, or to add nonce authentication (`getNonce`) or Topol Cloud (`cloud`) to an existing integration. For a page that embeds the Email Editor with the plain `<script>` tag (no npm package) use topol-editors-upgrade-email-v4. For a first-time integration use topol-editors-integration.'
+description: 'Upgrade a host app from `@topol.io/editor*` 0.x or any `1.0.0` prerelease to the stable 1.x (`^1`, Email Editor v4 API). Covers `@topol.io/editor`, `-react`, `-vue`, `-svelte` and the Landing Page Editor wrappers. Use when asked to upgrade, migrate, or bump Topol editor packages to 1.x / v1 or Email Editor v4, to port `TopolPlugin` / `TopolEditor` code to the `EmailEditor` instance API, when an install throws "Editor v4 requires { config: ... }", callbacks stop firing, Svelte `on:` events stop working, or "no default export" / "has no exported member" errors for `TopolPlugin`, `TopolEditor`, `ITopolOptions`, `ISaveData` or `ISvelteOptions` appear after a Topol bump, to rename `authorize.userId` to `entityId`, or to add nonce authentication (`getNonce`) or Topol Cloud (`cloud`) to an existing integration. For a page that embeds the Email Editor with the plain `<script>` tag (no npm package) use topol-editors-upgrade-email-v4. For a first-time integration use topol-editors-integration.'
 ---
 
-# Upgrade `@topol.io/editor*` 0.x / earlier 1.x alpha → 1.x (Email Editor v4)
+# Upgrade `@topol.io/editor*` 0.x / 1.0.0 prerelease → 1.x (Email Editor v4)
 
-> **Versions.** The target is `1.0.0-alpha.11` or later (`@topol.io/editor-react`
-> `1.0.0-alpha.12` or later). Three starting points exist:
+> **Versions.** The target is the stable 1.x line: `^1`, the `latest` dist-tag.
+> Four starting points exist:
 >
 > | From | API today | Work |
 > | --- | --- | --- |
-> | `0.3.0` (`latest`) | Email Editor v3 | every step |
+> | `0.3.0` | Email Editor v3 | every step |
 > | `1.0.0-alpha.1`–`.9` (editor-react up to `.10`) | Email Editor v3 | every step |
 > | `1.0.0-alpha.10` (editor-react `.11`), `2.0.0-alpha.1`–`.3` | Email Editor v4, old names | steps 1–2, then *Coming from `1.0.0-alpha.10`* in the reference, then steps 8 and 10 |
+> | `1.0.0-alpha.11` (editor-react `.12`) | Email Editor v4, current shape, pre-1.0 names still accepted | steps 1–2, then *Coming from `1.0.0-alpha.11`* in the reference, then step 10 |
+>
+> `1.0.0-alpha.12` and later (editor-react `.13`) already have the release API: step 2 only.
 
-The v4 API: `EmailEditor.init` takes `{ config, ...callbacks }` and returns an independent instance; nothing lives on `window` any more. Every callback receives zero arguments or one object. Reusable blocks are sections. Language mutations use `code`. `authorize.userId` is `authorize.entityId`. The `TopolPlugin` / `TopolEditor` names and the pre-1.0 type names are removed, not aliased. The Svelte wrapper needs Svelte 5 and takes callbacks as props.
+The v4 API: `EmailEditor.init` takes `{ config, ...callbacks }` and returns an independent instance; nothing lives on `window` any more. Every callback receives zero arguments or one object. Reusable blocks are sections. Language mutations use `code`. `authorize.userId` is `authorize.entityId`. The `TopolPlugin` / `TopolEditor` names, the pre-1.0 type names and the pre-1.0 option, callback and method names are removed, not aliased. The Svelte wrapper needs Svelte 5 and takes callbacks as props.
 
-[`references/reference.md`](references/reference.md) holds the version map, the differences per starting point, every rename table, the per-framework before/after code, loader rules, wrapper semantics, and the nonce and Cloud setup. [`references/landing-page-editor.md`](references/landing-page-editor.md) covers adding the Landing Page Editor and fixing Landing Page Editor code written against an earlier alpha.
+[`references/reference.md`](references/reference.md) holds the version map, the differences per starting point, every rename table, the per-framework before/after code, loader rules, wrapper semantics, and the nonce and Cloud setup. [`references/landing-page-editor.md`](references/landing-page-editor.md) covers adding the Landing Page Editor and fixing Landing Page Editor code written against a prerelease.
 
 ## Steps
 
@@ -32,26 +35,25 @@ grep -rnE "@topol\.io/editor|TopolPlugin|TopolEditor|EmailEditor|LandingPageEdit
 
 Record the installed version of each Topol package (it selects the row in the table above) and, for each hit, its kind: dependency, init/mount, method call, callback handler, config option, type import, CSS/DOM selector, loader script or env var. Note which framework wrapper (or plain core) is used, the framework's major version, and whether the app uses React StrictMode, SSR, or several editors per page.
 
-If every Topol package is already at `1.0.0-alpha.11`+ (editor-react `1.0.0-alpha.12`+), there is nothing to migrate.
+If every Topol package is already at a stable `1.x` version, there is nothing to migrate.
 
 Done when every file that imports a Topol package is listed, and every identifier from the rename tables in `references/reference.md` that appears in the app has a line in the inventory.
 
-### 2. Install the current 1.x release
+### 2. Install 1.x
 
 **Svelte gate.** `@topol.io/editor-svelte` 1.x requires Svelte 5. If the app is on Svelte 4, stop and ask: upgrade Svelte first (a separate task), replace the wrapper with the core `@topol.io/editor` driven from `onMount`, or stay on `0.3`.
 
-1.x is a prerelease, published on the `alpha` dist-tag while `latest` still points at `0.3.0`. Each package has its own number (editor-react is one ahead), so resolve them separately and pin exact versions, never `^`:
+1.x is the stable line, on the `latest` dist-tag. Install `^1` of every Topol package the app depends on:
 
 ```sh
-npm view @topol.io/editor dist-tags          # need 1.0.0-alpha.11 or later
-npm view @topol.io/editor-react dist-tags    # need 1.0.0-alpha.12 or later (-vue / -svelte: .11+)
-npm install @topol.io/editor-react@<resolved version>   # wrappers pull in the matching core
+npm view @topol.io/editor-react dist-tags    # latest must be 1.0.0 or later
+npm install @topol.io/editor-react@^1        # wrappers pull in the matching core
 npm ls @topol.io/editor
 ```
 
-Take the highest 1.x version among the tags (`alpha` today; a `beta` tag or `latest` once 1.x moves on). If no tag reaches those versions, stop and tell the user. If the app also depends on the core directly, pin it to the version the wrapper depends on (`npm view @topol.io/editor-react@<version> dependencies`). Use the app's own package manager (detect it from the lockfile). If the app pins `@topol.io/editor` 0.x deliberately (comment, renovate config), ask before bumping.
+If `latest` is below `1.0.0` (a private mirror or a stale cache can still serve `0.3.0`), stop and tell the user instead of installing a prerelease. An app pinned to an exact prerelease (`1.0.0-alpha.N`) needs the version in `package.json` changed to `^1`. If the app also depends on the core directly, install `@topol.io/editor@^1` too. Use the app's own package manager (detect it from the lockfile). If the app pins `@topol.io/editor` 0.x deliberately (comment, renovate config), ask before bumping.
 
-Done when `npm ls @topol.io/editor` shows a single 1.x entry at `1.0.0-alpha.11` or later.
+Done when `npm ls @topol.io/editor` shows a single stable 1.x entry (`1.0.0` or later, no `-alpha`).
 
 ### 3. Rewrite initialization and lifecycle
 
@@ -72,23 +74,23 @@ Replace every `TopolPlugin.x()` / `EmailEditor.x()` / `CoreEmailEditor.x()` / `w
 
 Renames: `save('en')` → `save({ langCode: 'en' })`, `setSavedBlocks` → `setSavedSections`, `refreshSyncedRows` → `refreshSyncedSections`, `toggleBlocksAndStructuresVisibility` → `toggleHiddenElementsVisibility`, `toggleControlPanel` → `toggleSelectionPanel`. `getMutations()` resolves to `{ code, primary }[]`. Full table in `references/reference.md`.
 
+A method called under its old name throws "not a function".
+
 Done when `TopolPlugin` and `window.TopolPlugin` no longer appear, and every renamed method is replaced.
 
 ### 5. Convert callbacks to object payloads
 
-Rewrite each handler to take `()` or `({ ... })`, applying the callback table in `references/reference.md`. Renames: `onClose` → `onEditorClose`, `onError(type, message, body)` → `onEditorError({ source, message, detail })`, `onBlockSave/Remove/Edit` → `onSavedSectionSave/Remove/Edit`, `onEdittedWithoutSaveChanged(bool)` → `onUnsavedChangesChange({ hasUnsavedChanges })`, `updateTestingEmailAddresses(emails)` → `onTestingEmailsChange({ emails })`. Language payloads use `code`, not `lang`/`key`. Vue events that passed a bare value (`count`, `html`, `title`, …) now pass an object too.
+Rewrite each handler to take `()` or `({ ... })`, applying the callback table in `references/reference.md`. Renames: `onClose` → `onEditorClose`, `onError(type, message, body)` → `onEditorError({ source, message, detail })`, `onBlockSave/Remove/Edit` → `onSavedSectionSave/Remove/Edit`, `onEdittedWithoutSaveChanged(bool)` → `onUnsavedChangesChange({ hasUnsavedChanges })`, `updateTestingEmailAddresses(emails)` → `onTestingEmailsChange({ emails })`, `onBlocksAndStructuresVisibilityChange` → `onHiddenElementsVisibilityChange({ visible })`. Language payloads use `code`, not `lang`/`key`. Vue events that passed a bare value (`count`, `html`, `title`, …) now pass an object too.
 
-The editor drops `onClose` and `onError` keys silently (they are reserved by the iframe bridge), so a leftover handler never fires. `onSave` that persists to a backend must return its promise; a rejection surfaces as a save error in the editor. Code that switches on `onEditorError`'s `source` must use `load`, not `templateLoad`.
+The editor drops `onClose` and `onError` keys silently (they are reserved by the iframe bridge), so a leftover handler never fires; a handler left under any other old name is never called either, and nothing warns. `onSave` that persists to a backend must return its promise; a rejection surfaces as a save error in the editor. Code that switches on `onEditorError`'s `source` must use `load`, not `templateLoad`.
 
-Done when every handler in the inventory matches a current signature and none is named `onClose`, `onError`, or `onBlock*`.
+Done when every handler in the inventory matches a current signature and none is named `onClose`, `onError`, `onBlock*`, or another pre-1.0 name.
 
 ### 6. Rename configuration options and types
 
-Apply the config table in `references/reference.md`: `authorize.userId` → `authorize.entityId`, `savedBlocks` → `savedSections`, `premadeBlocks` (+ `premadeBlocksNoOverwrite`) → `premadeSections`, `syncedRowsEnable` → `syncedSectionsEnabled`, `topBarOptions` → `hideTopbarControls` (invert the list), `defaultTemplateSettings.langs[].key` → `code`. Remove the deleted `api` endpoints (`SAVE`, `LOAD`, `PREVIEW`, `AUTOSAVE`, `GET_AUTOSAVE`, `SYNCED_ROWS`, `TEST_EMAIL`, `IMAGE_EDITOR_UPLOAD`; `SAVED_BLOCKS` → `SAVED_SECTIONS`) and the removed options listed there. `entityId` must be a non-negative integer or match `[A-Za-z0-9_-]+`.
+Apply the config table in `references/reference.md`: `authorize.userId` → `authorize.entityId`, `savedBlocks` → `savedSections`, `premadeBlocks` (+ `premadeBlocksNoOverwrite`) → `premadeSections`, `syncedRowsEnable` → `syncedSectionsEnabled`, `topBarOptions` → `hideTopbarControls` (invert the list), `defaultTemplateSettings.langs[].key` → `code`, `hideControlPanel` → `hideSelectionPanel`, `showControlPanelExpand` → `hideSelectionPanelExpand` (inverted), `productMergetagTags` → `productMergeTags`, `dynamicMergetags` → `dynamicMergeTags`, `api.PREMADE_TEMPLATES_KEYWORDS` → `api.PREMADE_TEMPLATE_KEYWORDS`, and the four `defaultTemplateSettings` keys. Remove the deleted `api` endpoints (`SAVE`, `LOAD`, `PREVIEW`, `AUTOSAVE`, `GET_AUTOSAVE`, `SYNCED_ROWS`, `TEST_EMAIL`, `IMAGE_EDITOR_UPLOAD`; `SAVED_BLOCKS` → `SAVED_SECTIONS`) and the removed options listed there. `entityId` must be a non-negative integer or match `[A-Za-z0-9_-]+`; `init()` rejects a config that only sets `userId`. None of the old names is accepted any more: an option left under one is ignored without an error.
 
-Apps coming from the v3 API also rename their `textOverride` keys (`saved_blocks*` → `saved_sections*`, …; table in the reference) and get four changed defaults: `smartMergeTags.enabled`, `mobileFirstEnabled` and `premadeTemplates` are now `true`, and the selection-panel expand button is shown. Ask the user whether to keep the new defaults or pin the v3 values; do not decide for them.
-
-Rename the deprecated-but-working names in the same table too (`hideControlPanel`, `productMergetagTags`, the `defaultTemplateSettings` keys, …); they are removed in the next major.
+Apps coming from the v3 API also rename their `textOverride` keys (`saved_blocks*` → `saved_sections*`, the misspelled keys such as `layout.chatAI.grammer`, …; table in the reference) and get four changed defaults: `smartMergeTags.enabled`, `mobileFirstEnabled` and `premadeTemplates` are now `true`, and the selection-panel expand button is shown. Ask the user whether to keep the new defaults or pin the v3 values; do not decide for them.
 
 Types: the config is `IEmailConfig` (or the wrapper alias `IReactEmailOptions` / `IVueEmailOptions` / `ISvelteEmailOptions`). `ITopolOptions` is now `IEmailOptions` and means the factory props `{ config, ...callbacks }`. `ISaveData`, `IErrorData`, `ISendTestData`, `ISavedBlock`, `ITopolPlugin` and the wrapper prop/ref types are renamed; apply the type table in `references/reference.md`.
 
@@ -104,9 +106,11 @@ Done when no v3 loader URL, `VITE_TOPOL_URL`, host-inserted loader script, or ol
 
 ### 8. Landing Page Editor (only when present or asked)
 
-Apps already using `LandingPageEditor` from an earlier alpha need the changes in `references/landing-page-editor.md`: object payloads and `onEditorError` / `onEditorClose` (code from `1.0.0-alpha.1`–`.8`), and the new wrapper container, promise-returning ref and renamed types (any earlier alpha). Apps on 0.3.0 get the Landing Page Editor as new functionality; add it only when asked.
+Apps already using `LandingPageEditor` from a prerelease need the changes in `references/landing-page-editor.md`: object payloads and `onEditorError` / `onEditorClose` (code from `1.0.0-alpha.1`–`.8`), and the new wrapper container, promise-returning ref, renamed types and removed names (any prerelease up to `1.0.0-alpha.11`). Apps on 0.3.0 get the Landing Page Editor as new functionality; add it only when asked.
 
-### 9. Adopt nonce authentication or Topol Cloud (only when asked)
+### 9. Nonce authentication and Topol Cloud
+
+Nonce authentication is the setup Topol recommends for every integration, but the upgrade works without it: `authorize.apiKey` keeps authorizing the editor on its own. Add it when the user asks for it; otherwise finish the upgrade and recommend it in the report. Add Topol Cloud only when asked.
 
 Nonce authentication is standalone: passing `getNonce` switches the editor from the public-key authorize call to short-lived `nc_` nonces that a host server endpoint creates with the Secret key for the signed-in user. There is no separate option, and every feature stays external. It works for both editors. Topol Cloud (`cloud.enabled`, Email Editor) is layered on top and requires `getNonce`. Follow the Nonce authentication and Topol Cloud sections of `references/reference.md`. Cloud-owned features silence `onSave` / `onTestSend` and ignore matching `api` endpoints.
 
@@ -114,8 +118,8 @@ Nonce authentication is standalone: passing `getNonce` switches the editor from 
 
 1. Typecheck and build pass.
 2. The leftover grep in `references/reference.md` returns nothing.
-3. Run the app: `onInit` fires, a template loads, a save reaches the handler with the object payload, unmount logs no errors and no deprecation warnings from the editor. Under StrictMode or a double mount exactly one iframe exists.
-4. Report every changed file and the behaviour changes the host must know: saves are awaited, `onInit` now means authenticated, a failed authentication requires destroying and recreating the editor, and the account's API key must work with Email Editor v4.
+3. Run the app: `onInit` fires, a template loads, a save reaches the handler with the object payload, unmount logs no errors. Under StrictMode or a double mount exactly one iframe exists.
+4. Report every changed file and the behaviour changes the host must know: saves are awaited, `onInit` now means authenticated, a failed authentication requires destroying and recreating the editor, and the account's API key must work with Email Editor v4. If the app has no `getNonce`, recommend nonce authentication as the next step.
 
 ## Cannot be automated — always flag these
 
@@ -127,7 +131,6 @@ Nonce authentication is standalone: passing `getNonce` switches the editor from 
 - **Layout.** Removing the old container ids and absolute positioning can silently move the editor. Show the CSS diff and ask the user to check the screen.
 - **Templates and account.** Existing templates now open in Email Editor v4, and the API key must be enabled for v4. Tell the user to open and save one real template.
 - **Svelte 4 apps.** The Svelte major upgrade is the user's decision (step 2).
-- **Prerelease pin.** The user owns the decision to ship a prerelease to production. Flag it.
 
 ## Rules
 
